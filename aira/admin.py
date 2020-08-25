@@ -1,8 +1,9 @@
 from django.contrib import admin
 
-from .models import Agrifield, AppliedIrrigation, CropType, IrrigationType, Profile
+from . import models
 
 
+@admin.register(models.Profile)
 class ProfileAdmin(admin.ModelAdmin):
     exclude = ("user",)
     list_display = (
@@ -22,35 +23,43 @@ class ProfileAdmin(admin.ModelAdmin):
         obj.save()
 
 
+@admin.register(models.Agrifield)
 class AgrifieldAdmin(admin.ModelAdmin):
     pass
 
 
+@admin.register(models.AppliedIrrigation)
 class AppliedIrrigationAdmin(admin.ModelAdmin):
     pass
 
 
+class CropTypeKcStageInline(admin.TabularInline):
+    model = models.CropTypeKcStage
+    extra = 1
+
+
+@admin.register(models.CropType)
 class CropTypeAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "fek_category",
         "max_allowed_depletion",
-        "kc_init",
-        "kc_mid",
-        "kc_end",
+        "kc_initial",
     )
     search_fields = ("name", "fek_category")
     list_filter = ("fek_category",)
+    fields = (
+        ("name",),
+        ("root_depth_min", "root_depth_max"),
+        ("max_allowed_depletion"),
+        ("kc_offseason", "kc_initial", "planting_date"),
+        ("fek_category",),
+    )
+    inlines = [CropTypeKcStageInline]
 
 
+@admin.register(models.IrrigationType)
 class IrrigationTypeAdmin(admin.ModelAdmin):
     list_display = ("name", "efficiency")
     search_fields = ("name", "efficiency")
     list_filter = ("efficiency",)
-
-
-admin.site.register(Profile, ProfileAdmin)
-admin.site.register(Agrifield, AgrifieldAdmin)
-admin.site.register(AppliedIrrigation, AppliedIrrigationAdmin)
-admin.site.register(CropType, CropTypeAdmin)
-admin.site.register(IrrigationType, IrrigationTypeAdmin)

@@ -145,7 +145,7 @@ def _reset_id_sequence(table_name):
         call_command("sqlsequencereset", "aira", stdout=commands)
         commands.seek(0)
         for line in commands:
-            if table_name in line:
+            if f'"{table_name}"' in line:
                 connection.cursor().execute(line)
     finally:
         os.environ["DJANGO_COLORS"] = saved_django_colors
