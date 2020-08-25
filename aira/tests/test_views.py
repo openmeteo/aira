@@ -12,17 +12,18 @@ from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.core.cache import cache
 from django.core.files.base import ContentFile
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 
 import pandas as pd
 import pytz
+from bs4 import BeautifulSoup
 from django_selenium_clean import PageElement, SeleniumTestCase
 from model_mommy import mommy
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 
 from aira import views
-from aira.models import Agrifield, AppliedIrrigation
+from aira.models import Agrifield, AppliedIrrigation, CropTypeKcStage
 from aira.tests import RandomMediaRootMixin
 from aira.tests.test_agrifield import DataTestCase, SetupTestDataMixin
 
@@ -88,15 +89,23 @@ class TestAgrifieldListView(TestCase):
 
 
 class UpdateAgrifieldViewTestCase(DataTestCase):
-    def setUp(self):
-        super().setUp()
-        self._make_request()
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls._create_crop_type_kc_stages()
+        cls._make_request()
 
-    def _make_request(self):
-        self.client.login(username="bob", password="topsecret")
-        self.response = self.client.get(
-            "/update_agrifield/{}/".format(self.agrifield.id)
-        )
+    @classmethod
+    def _create_crop_type_kc_stages(cls):
+        c = CropTypeKcStage.objects.create
+        c(crop_type=cls.crop_type, order=1, ndays=32, kc_end=0.6)
+        c(crop_type=cls.crop_type, order=2, ndays=42, kc_end=0.95)
+
+    @classmethod
+    def _make_request(cls):
+        cls.client = Client()
+        cls.client.login(username="bob", password="topsecret")
+        cls.response = cls.client.get("/update_agrifield/{}/".format(cls.agrifield.id))
 
     def test_response_contains_agrifield_name(self):
         self.assertContains(self.response, "A field")
@@ -145,6 +154,84 @@ class UpdateAgrifieldViewTestCase(DataTestCase):
     def test_default_theta_s(self):
         self.assertContains(
             self.response, '<span id="default-theta_s">0.50</span>', html=True
+        )
+
+    def test_kc_stages(self):
+        self.assertContains(self.response, "35\t0.7\n45\t1.05")
+
+    def test_kc_stages_placeholder(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        kc_stages_element = soup.find("textarea", id="id_kc_stages")
+        self.assertIsNone(kc_stages_element.get("placeholder"))
+
+    def test_default_kc_stages(self):
+        self.assertContains(
+            self.response,
+            '<div id="default-kc_stages"><p>32\t0.6<br>42\t0.95</p></div>',
+            html=True,
+        )
+
+    def test_kc_initial(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        kc_initial_element = soup.find("input", id="id_custom_kc_initial")
+        self.assertEqual(kc_initial_element.get("value"), "0.35")
+
+    def test_kc_initial_placeholder(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        kc_initial_element = soup.find("input", id="id_custom_kc_initial")
+        self.assertEqual(kc_initial_element.get("placeholder"), "0.3 - 1.25")
+
+    def test_default_kc_initial(self):
+        self.assertContains(
+            self.response, '<span id="default-kc_initial">0.7</span>', html=True
+        )
+
+    def test_kc_offseason(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        kc_offseason_element = soup.find("input", id="id_custom_kc_offseason")
+        self.assertEqual(kc_offseason_element.get("value"), "0.3")
+
+    def test_kc_offseason_placeholder(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        kc_offseason_element = soup.find("input", id="id_custom_kc_offseason")
+        self.assertEqual(kc_offseason_element.get("placeholder"), "0.3 - 1.25")
+
+    def test_default_kc_offseason(self):
+        self.assertContains(
+            self.response, '<span id="default-kc_offseason">0.7</span>', html=True
+        )
+
+    def test_kc_planting_date(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        planting_date_element = soup.find("input", id="id_custom_planting_date")
+        self.assertEqual(planting_date_element.get("value"), "20/03")
+
+    def test_planting_date_placeholder(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        planting_date_element = soup.find("input", id="id_custom_planting_date")
+        self.assertEqual(planting_date_element.get("placeholder"), "day/month")
+
+    def test_default_planting_date(self):
+        self.assertContains(
+            self.response, '<span id="default-planting_date">16 Mar</span>', html=True
+        )
+
+
+class UpdateAgrifieldViewWithEmptyDefaultKcStagesTestCase(DataTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls._make_request()
+
+    @classmethod
+    def _make_request(cls):
+        cls.client = Client()
+        cls.client.login(username="bob", password="topsecret")
+        cls.response = cls.client.get("/update_agrifield/{}/".format(cls.agrifield.id))
+
+    def test_default_kc_stages(self):
+        self.assertContains(
+            self.response, '<span id="default-kc_stages">Unspecified</span>', html=True
         )
 
 
@@ -616,17 +703,17 @@ class ResetPasswordTestCase(TestCase):
 
 
 class IrrigationPerformanceChartTestCase(DataTestCase):
-    def setUp(self):
-        super().setUp()
-        self.results = self.agrifield.execute_model()
-        self.client.login(username="bob", password="topsecret")
-        self.response = self.client.get(
-            f"/irrigation-performance-chart/{self.agrifield.id}/"
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.results = cls.agrifield.execute_model()
+        cls.client = Client()
+        cls.client.login(username="bob", password="topsecret")
+        cls.response = cls.client.get(
+            f"/irrigation-performance-chart/{cls.agrifield.id}/"
         )
-        assert self.response.status_code == 200
-        self.series = self._extract_series_from_javascript(
-            self.response.content.decode()
-        )
+        assert cls.response.status_code == 200
+        cls.series = cls._extract_series_from_javascript(cls.response.content.decode())
 
     _series_regexp = r"""
         \sseries:\s* # "series:" preceded by space and followed by optional whitespace.
@@ -638,8 +725,9 @@ class IrrigationPerformanceChartTestCase(DataTestCase):
         )
     """
 
-    def _extract_series_from_javascript(self, page_content):
-        m = re.search(self._series_regexp, page_content, re.VERBOSE)
+    @classmethod
+    def _extract_series_from_javascript(cls, page_content):
+        m = re.search(cls._series_regexp, page_content, re.VERBOSE)
         series = eval(m.group("series"))
         result = {x["name"]: x["data"] for x in series}
         return result
@@ -663,14 +751,16 @@ class IrrigationPerformanceChartTestCase(DataTestCase):
 
 
 class IrrigationPerformanceCsvTestCase(DataTestCase):
-    def setUp(self):
-        super().setUp()
-        self.results = self.agrifield.execute_model()
-        self.client.login(username="bob", password="topsecret")
-        self.response = self.client.get(
-            f"/download-irrigation-performance/{self.agrifield.id}/"
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.results = cls.agrifield.execute_model()
+        cls.client = Client()
+        cls.client.login(username="bob", password="topsecret")
+        cls.response = cls.client.get(
+            f"/download-irrigation-performance/{cls.agrifield.id}/"
         )
-        assert self.response.status_code == 200
+        assert cls.response.status_code == 200
 
     def test_applied_water_when_irrigation_specified(self):
         m = re.search(

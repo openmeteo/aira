@@ -1,9 +1,11 @@
 import datetime as dt
 import os
+from glob import glob
 
 from django.conf import settings
 from django.core.cache import cache
 
+import iso8601
 import numpy as np
 import pandas as pd
 import pytz
@@ -41,17 +43,9 @@ class AgrifieldSWBMixin:
             prefix=os.path.join(
                 getattr(settings, "AIRA_DATA_" + category), "daily_" + varname
             ),
-            start_date=self.start_of_season,
+            start_date=InitialConditions(self).date,
             default_time=dt.time(23, 59),
         ).get()
-
-    @property
-    def start_of_season(self):
-        today = dt.date.today()
-        result = dt.datetime(today.year, 3, 15, 0, 0)
-        if result > dt.datetime.now():
-            result = dt.datetime(today.year - 1, 3, 15, 0, 0)
-        return result
 
     def _get_timeseries_from_rasters(self, var):
         historical = self._point_timeseries("HISTORICAL", var)
@@ -112,14 +106,9 @@ class AgrifieldSWBMixin:
         calculate_crop_evapotranspiration(
             timeseries=self.timeseries,
             planting_date=self.crop_type.most_recent_planting_date,
-            kc_unplanted=self.crop_type.kc_init,
-            kc_ini=self.crop_type.kc_init,
-            kc_mid=self.crop_type.kc_mid,
-            kc_end=self.crop_type.kc_end,
-            init=self.crop_type.days_kc_init,
-            dev=self.crop_type.days_kc_dev,
-            mid=self.crop_type.days_kc_mid,
-            late=self.crop_type.days_kc_late,
+            kc_offseason=self.crop_type.kc_offseason,
+            kc_initial=self.crop_type.kc_initial,
+            kc_stages=self.crop_type.kc_stages,
         )
 
     def prepare_timeseries(self):
@@ -142,7 +131,7 @@ class AgrifieldSWBMixin:
             zr_factor=1000,
             p=float(self.p),
             draintime=self.draintime,
-            theta_init=self.field_capacity,
+            theta_init=InitialConditions(self).theta,
             mif=self.irrigation_optimizer,
         )
 
@@ -261,3 +250,76 @@ class AgrifieldSWBResultsMixin:
             return last_irrigation_date < start_date or last_irrigation_date > end_date
         except (TypeError, AttributeError, IndexError):
             return True
+
+
+class InitialConditions:
+    """Helper class that determines initial conditions for swb.
+
+    The initial conditions for running the soil water model are normally that on the
+    previous 15 March the soil was at field capacity. However, if a
+    `theta-YYYY-MM-DD.tif` file exists and the date specified in the file name is more
+    recent than the previous 15 March, it is assumed instead that the water content at
+    the date specified is what is specified by the file.
+
+    This class is initialized with an agrifield and exposes properties "date" and
+    "theta", which are the initial conditions according to the rules above.
+    """
+
+    def __init__(self, agrifield):
+        self.agrifield = agrifield
+
+    @property
+    def date(self):
+        itrd = self._get_initial_theta_raster_date()
+        if itrd is not None and itrd > self._start_of_season:
+            return itrd
+        else:
+            return self._start_of_season
+
+    def _get_initial_theta_raster_date(self):
+        try:
+            datestring = self._initial_theta_raster_file[-14:-4]
+            return iso8601.parse_date(datestring).replace(tzinfo=None)
+        except (TypeError, iso8601.ParseError):
+            return None
+
+    @property
+    def _start_of_season(self):
+        today = dt.date.today()
+        result = dt.datetime(today.year, 3, 15, 0, 0)
+        if result > dt.datetime.now():
+            result = dt.datetime(today.year - 1, 3, 15, 0, 0)
+        return result
+
+    @property
+    def theta(self):
+        itrd = self._get_initial_theta_raster_date()
+        if itrd is not None and itrd > self._start_of_season:
+            return self._get_theta_init_from_raster()
+        else:
+            return self.agrifield.field_capacity
+
+    def _get_theta_init_from_raster(self):
+        if not self.agrifield.in_covered_area:
+            return None
+        else:
+            return extract_point_from_raster(
+                self.agrifield.location, gdal.Open(self._initial_theta_raster_file)
+            )
+
+    @property
+    def _initial_theta_raster_file(self):
+        pathnames = glob(os.path.join(settings.AIRA_DATA_SOIL, "theta-????-??-??.tif"))
+        result = None
+        for pathname in pathnames:
+            datestr = pathname[-14:-4]
+            if self._is_valid_date(datestr) and (result is None or pathname > result):
+                result = pathname
+        return result
+
+    def _is_valid_date(self, datestr):
+        try:
+            iso8601.parse_date(datestr)
+            return True
+        except iso8601.ParseError:
+            return False

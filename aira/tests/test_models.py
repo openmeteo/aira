@@ -11,14 +11,15 @@ from django.http.response import Http404
 from django.test import TestCase, override_settings
 
 from model_mommy import mommy
+from swb import KcStage
 
-from aira.models import Agrifield, AppliedIrrigation, CropType, IrrigationType, Profile
+from aira import models
 from aira.tests import RandomMediaRootMixin
 
 
 class UserTestCase(TestCase):
     def setUp(self):
-        self.assertEqual(Profile.objects.count(), 0)
+        self.assertEqual(models.Profile.objects.count(), 0)
         self.user = User.objects.create_user(
             id=55, username="bob", password="topsecret"
         )
@@ -27,7 +28,7 @@ class UserTestCase(TestCase):
         self.assertEqual(hasattr(self.user, "profile"), True)
 
     def test_created_user_same_profile_FK(self):
-        profile = Profile.objects.get(user_id=self.user.id)
+        profile = models.Profile.objects.get(user_id=self.user.id)
         self.assertEqual(profile.user, self.user)
 
     def test_save_user_profile_receiver(self):
@@ -35,7 +36,7 @@ class UserTestCase(TestCase):
         self.user.profile.last_name = "Wayne"
         self.user.profile.address = "Gotham City"
         self.user.save()
-        profile = Profile.objects.get(user_id=self.user.id)
+        profile = models.Profile.objects.get(user_id=self.user.id)
         self.assertEqual(profile.first_name, "Bruce")
         self.assertEqual(profile.last_name, "Wayne")
         self.assertEqual(profile.address, "Gotham City")
@@ -44,7 +45,7 @@ class UserTestCase(TestCase):
 class AgrifieldTestCaseBase(TestCase):
     def setUp(self):
         self.crop_type = mommy.make(
-            CropType,
+            models.CropType,
             name="Grass",
             root_depth_max=0.7,
             root_depth_min=1.2,
@@ -52,13 +53,13 @@ class AgrifieldTestCaseBase(TestCase):
             fek_category=4,
         )
         self.irrigation_type = mommy.make(
-            IrrigationType, name="Surface irrigation", efficiency=0.60
+            models.IrrigationType, name="Surface irrigation", efficiency=0.60
         )
         self.user = User.objects.create_user(
             id=55, username="bob", password="topsecret"
         )
         self.agrifield = mommy.make(
-            Agrifield,
+            models.Agrifield,
             id=42,
             owner=self.user,
             name="A field",
@@ -71,7 +72,7 @@ class AgrifieldTestCaseBase(TestCase):
 
 class AgrifieldTestCase(AgrifieldTestCaseBase):
     def test_agrifield_creation(self):
-        agrifield = Agrifield.objects.create(
+        agrifield = models.Agrifield.objects.create(
             owner=self.user,
             name="A field",
             crop_type=self.crop_type,
@@ -79,7 +80,7 @@ class AgrifieldTestCase(AgrifieldTestCaseBase):
             location=Point(18.0, 23.0),
             area=2000,
         )
-        self.assertTrue(isinstance(agrifield, Agrifield))
+        self.assertTrue(isinstance(agrifield, models.Agrifield))
         self.assertEqual(agrifield.__str__(), agrifield.name)
 
     def test_agrifield_update(self):
@@ -89,7 +90,7 @@ class AgrifieldTestCase(AgrifieldTestCaseBase):
 
     def test_agrifield_delete(self):
         self.agrifield.delete()
-        self.assertEqual(Agrifield.objects.all().count(), 0)
+        self.assertEqual(models.Agrifield.objects.all().count(), 0)
 
     def test_valid_user_can_edit(self):
         self.assertTrue(self.agrifield.can_edit(self.user))
@@ -143,7 +144,7 @@ class AgrifieldDeletesCachedPointTimeseriesOnSave(AgrifieldTestCaseBase):
 class AgrifieldSoilAnalysisTestCase(TestCase, RandomMediaRootMixin):
     def setUp(self):
         self.override_media_root()
-        self.agrifield = mommy.make(Agrifield)
+        self.agrifield = mommy.make(models.Agrifield)
         self.agrifield.soil_analysis.save("somefile", ContentFile("hello world"))
 
     def tearDown(self):
@@ -162,7 +163,9 @@ class AgrifieldSoilAnalysisTestCase(TestCase, RandomMediaRootMixin):
 
 class CropTypeMostRecentPlantingDateTestCase(TestCase):
     def setUp(self):
-        self.crop_type = mommy.make(CropType, planting_date=dt.datetime(1971, 3, 15))
+        self.crop_type = mommy.make(
+            models.CropType, planting_date=dt.datetime(1971, 3, 15)
+        )
 
     @mock.patch("aira.models.dt.date")
     def test_result_when_it_has_appeared_this_year(self, m):
@@ -181,9 +184,39 @@ class CropTypeMostRecentPlantingDateTestCase(TestCase):
         )
 
 
+class CropTypeKcStagesTestCase(TestCase):
+    def setUp(self):
+        self.crop_type = mommy.make(
+            models.CropType,
+            planting_date=dt.datetime(1971, 3, 21),
+            kc_offseason=0.3,
+            kc_initial=0.7,
+        )
+        for i, s in enumerate([(35, 0.7), (45, 1.05), (40, 1.05), (15, 0.95)], start=1):
+            models.CropTypeKcStage.objects.create(
+                crop_type=self.crop_type, order=i, ndays=s[0], kc_end=s[1],
+            )
+
+    def test_kc_stages(self):
+        self.assertEqual(
+            self.crop_type.kc_stages,
+            [
+                KcStage(35, 0.7),
+                KcStage(45, 1.05),
+                KcStage(40, 1.05),
+                KcStage(15, 0.95),
+            ],
+        )
+
+    def test_kc_stages_str(self):
+        self.assertEqual(
+            self.crop_type.kc_stages_str, "35\t0.7\n45\t1.05\n40\t1.05\n15\t0.95"
+        )
+
+
 class AgrifieldLatestAppliedIrrigationDefaultsTestCase(TestCase):
     def setUp(self):
-        self.agrifield = mommy.make(Agrifield)
+        self.agrifield = mommy.make(models.Agrifield)
 
     def test_no_applied_irrigations_present(self):
         defaults = self.agrifield.get_applied_irrigation_defaults()
@@ -195,7 +228,7 @@ class AgrifieldLatestAppliedIrrigationDefaultsTestCase(TestCase):
         # To assert which instance is the value coming from, a simple 2 digits scheme
         # is followed, first digit is the field id, the second is a bit (T/F)
         mommy.make(
-            AppliedIrrigation,
+            models.AppliedIrrigation,
             agrifield=self.agrifield,
             irrigation_type="VOLUME_OF_WATER",
             timestamp=latest - dt.timedelta(days=1),
@@ -207,7 +240,7 @@ class AgrifieldLatestAppliedIrrigationDefaultsTestCase(TestCase):
             flowmeter_reading_start=60,
         )
         mommy.make(
-            AppliedIrrigation,
+            models.AppliedIrrigation,
             agrifield=self.agrifield,
             irrigation_type="FLOWMETER_READINGS",
             timestamp=latest,
@@ -219,7 +252,7 @@ class AgrifieldLatestAppliedIrrigationDefaultsTestCase(TestCase):
             flowmeter_reading_start=61,  # Won't be used anyway (end=start)
         )
         mommy.make(
-            AppliedIrrigation,
+            models.AppliedIrrigation,
             agrifield=self.agrifield,
             irrigation_type="DURATION_OF_IRRIGATION",
             timestamp=latest - dt.timedelta(days=5),
@@ -243,7 +276,7 @@ class AgrifieldLatestAppliedIrrigationDefaultsTestCase(TestCase):
 
     def test_only_water_volume_default_present(self):
         mommy.make(
-            AppliedIrrigation,
+            models.AppliedIrrigation,
             agrifield=self.agrifield,
             irrigation_type="VOLUME_OF_WATER",
             timestamp=dt.datetime(2020, 3, 1, 0, 0, tzinfo=dt.timezone.utc),
@@ -255,6 +288,25 @@ class AgrifieldLatestAppliedIrrigationDefaultsTestCase(TestCase):
             "supplied_water_volume": 1337,
         }
         self.assertEqual(defaults, expected_defaults)
+
+
+class AgrifieldCustomKcStagesTestCase(TestCase):
+    def setUp(self):
+        self.agrifield = mommy.make(models.Agrifield)
+        csv = "15,0.9\n25\t0.8"
+        self.agrifield.set_custom_kc_stages(csv)
+
+    def test_set_custom_kc_stages(self):
+        kc_stages = models.AgrifieldCustomKcStage.objects.order_by("order")
+        self.assertEqual(kc_stages[0].order, 1)
+        self.assertEqual(kc_stages[0].ndays, 15)
+        self.assertAlmostEqual(kc_stages[0].kc_end, 0.9)
+        self.assertEqual(kc_stages[1].order, 2)
+        self.assertEqual(kc_stages[1].ndays, 25)
+        self.assertAlmostEqual(kc_stages[1].kc_end, 0.8)
+
+    def test_kc_stages_str(self):
+        self.assertEqual(self.agrifield.kc_stages_str, "15\t0.9\n25\t0.8")
 
 
 class AppliedIrrigationTestCase(TestCase):
@@ -276,7 +328,7 @@ class AppliedIrrigationTestCase(TestCase):
             "supplied_water_volume": 1337,
         }
         irrigation = mommy.make(
-            AppliedIrrigation, irrigation_type="VOLUME_OF_WATER", **kwargs,
+            models.AppliedIrrigation, irrigation_type="VOLUME_OF_WATER", **kwargs,
         )
         self.assertEqual(irrigation.volume, 1337)
 
@@ -287,7 +339,7 @@ class AppliedIrrigationTestCase(TestCase):
             "supplied_flow_rate": 0.5,
         }
         irrigation = mommy.make(
-            AppliedIrrigation, irrigation_type="DURATION_OF_IRRIGATION", **kwargs
+            models.AppliedIrrigation, irrigation_type="DURATION_OF_IRRIGATION", **kwargs
         )
         self.assertEqual(irrigation.volume, 1337)
 
@@ -299,7 +351,7 @@ class AppliedIrrigationTestCase(TestCase):
             "flowmeter_water_percentage": 50,
         }
         irrigation = mommy.make(
-            AppliedIrrigation, irrigation_type="FLOWMETER_READINGS", **kwargs
+            models.AppliedIrrigation, irrigation_type="FLOWMETER_READINGS", **kwargs
         )
         self.assertEqual(irrigation.volume, 1337 * 2)  # Double; since percentage is 50%
 
@@ -307,6 +359,6 @@ class AppliedIrrigationTestCase(TestCase):
         types = ["VOLUME_OF_WATER", "DURATION_OF_IRRIGATION", "FLOWMETER_READINGS"]
         for ir_type in types:
             irrigation = mommy.make(
-                AppliedIrrigation, irrigation_type="DURATION_OF_IRRIGATION",
+                models.AppliedIrrigation, irrigation_type="DURATION_OF_IRRIGATION",
             )
             self.assertIsNone(irrigation.volume)

@@ -2,6 +2,7 @@ import datetime as dt
 import os
 import shutil
 import tempfile
+from glob import glob
 from unittest.mock import PropertyMock, patch
 
 from django.contrib.auth.models import User
@@ -15,7 +16,8 @@ from freezegun import freeze_time
 from model_mommy import mommy
 from osgeo import gdal, osr
 
-from aira.models import Agrifield, AppliedIrrigation, CropType, IrrigationType
+from aira import models
+from aira.agrifield import InitialConditions
 
 
 def setup_input_file(filename, value, timestamp_str):
@@ -88,70 +90,78 @@ class SetupTestDataMixin:
         )
         setup_input_file(filename, np.array(contents), datestr)
 
-    def _setup_database(self):
-        self._create_crop_type()
-        self._create_user()
-        self._create_irrigation_type()
-        self._create_agrifield()
-        self._create_applied_irrigations()
+    @classmethod
+    def _setup_database(cls):
+        cls._create_crop_type()
+        cls._create_user()
+        cls._create_irrigation_type()
+        cls._create_agrifield()
+        cls._create_custom_kc_stages()
+        cls._create_applied_irrigations()
 
-    def _create_user(self):
-        self.user = User.objects.create_user(
-            id=55, username="bob", password="topsecret"
-        )
+    @classmethod
+    def _create_user(cls):
+        cls.user = User.objects.create_user(id=55, username="bob", password="topsecret")
 
-    def _create_crop_type(self):
-        self.crop_type = mommy.make(
-            CropType,
+    @classmethod
+    def _create_crop_type(cls):
+        cls.crop_type = mommy.make(
+            models.CropType,
             name="Grass",
             root_depth_max=0.7,
             root_depth_min=1.2,
             max_allowed_depletion=0.5,
             fek_category=4,
-            kc_init=0.7,
-            kc_mid=0.7,
-            kc_end=0.7,
-            days_kc_init=10,
-            days_kc_dev=20,
-            days_kc_mid=20,
-            days_kc_late=30,
+            kc_offseason=0.7,
+            kc_initial=0.7,
             planting_date=dt.date(2018, 3, 16),
         )
 
-    def _create_irrigation_type(self):
-        self.irrigation_type = mommy.make(
-            IrrigationType, name="Surface irrigation", efficiency=0.60
+    @classmethod
+    def _create_irrigation_type(cls):
+        cls.irrigation_type = mommy.make(
+            models.IrrigationType, name="Surface irrigation", efficiency=0.60
         )
 
-    def _create_agrifield(self):
-        self.agrifield = mommy.make(
-            Agrifield,
+    @classmethod
+    def _create_agrifield(cls):
+        cls.agrifield = mommy.make(
+            models.Agrifield,
             id=1,
-            owner=self.user,
+            owner=cls.user,
             name="A field",
-            crop_type=self.crop_type,
-            irrigation_type=self.irrigation_type,
+            crop_type=cls.crop_type,
+            irrigation_type=cls.irrigation_type,
             location=Point(22.0, 38.0),
             area=2000,
+            custom_kc_offseason=0.3,
+            custom_kc_initial=0.35,
+            custom_planting_date=dt.date(1970, 3, 20),
         )
 
-    def _create_applied_irrigations(self):
-        self.applied_irrigation_1 = mommy.make(
-            AppliedIrrigation,
-            agrifield=self.agrifield,
+    @classmethod
+    def _create_custom_kc_stages(cls):
+        c = models.AgrifieldCustomKcStage.objects.create
+        c(agrifield=cls.agrifield, order=1, ndays=35, kc_end=0.7)
+        c(agrifield=cls.agrifield, order=2, ndays=45, kc_end=1.05)
+
+    @classmethod
+    def _create_applied_irrigations(cls):
+        cls.applied_irrigation_1 = mommy.make(
+            models.AppliedIrrigation,
+            agrifield=cls.agrifield,
             timestamp=dt.datetime(2018, 3, 15, 7, 0, tzinfo=dt.timezone.utc),
             supplied_water_volume=500,
         )
-        self.applied_irrigation_2 = mommy.make(
-            AppliedIrrigation,
-            agrifield=self.agrifield,
+        cls.applied_irrigation_2 = mommy.make(
+            models.AppliedIrrigation,
+            agrifield=cls.agrifield,
             timestamp=dt.datetime(2018, 3, 19, 7, 0, tzinfo=dt.timezone.utc),
             supplied_water_volume=None,
         )
 
     @classmethod
     def setUpClass(cls):
-        super().setUpClass()
         cls.tempdir = tempfile.mkdtemp()
         os.mkdir(os.path.join(cls.tempdir, "historical"))
         os.mkdir(os.path.join(cls.tempdir, "forecast"))
@@ -166,6 +176,7 @@ class SetupTestDataMixin:
         }
         for x in cls._context_managers:
             x.__enter__()
+        super().setUpClass()
 
     @classmethod
     def tearDownClass(cls):
@@ -176,9 +187,10 @@ class SetupTestDataMixin:
 
 
 class DataTestCase(SetupTestDataMixin, TestCase):
-    def setUp(self):
-        super().setUp()
-        self._setup_database()
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls._setup_database()
 
 
 class ExecuteModelTestCase(DataTestCase):
@@ -275,27 +287,6 @@ class ExecuteModelTestCase(DataTestCase):
         )
 
 
-class StartOfSeasonTestCase(TestCase):
-    def setUp(self):
-        self.agrifield = mommy.make(Agrifield)
-
-    @freeze_time("2018-01-01 13:00:01")
-    def test_jan_1(self):
-        self.assertEqual(self.agrifield.start_of_season, dt.datetime(2017, 3, 15, 0, 0))
-
-    @freeze_time("2018-03-14 13:00:01")
-    def test_mar_14(self):
-        self.assertEqual(self.agrifield.start_of_season, dt.datetime(2017, 3, 15, 0, 0))
-
-    @freeze_time("2018-03-15 13:00:01")
-    def test_mar_15(self):
-        self.assertEqual(self.agrifield.start_of_season, dt.datetime(2018, 3, 15, 0, 0))
-
-    @freeze_time("2018-12-31 13:00:01")
-    def test_dec_31(self):
-        self.assertEqual(self.agrifield.start_of_season, dt.datetime(2018, 3, 15, 0, 0))
-
-
 _locmemcache = "django.core.cache.backends.locmem.LocMemCache"
 _in_covered_area = "aira.models.Agrifield.in_covered_area"
 
@@ -303,7 +294,7 @@ _in_covered_area = "aira.models.Agrifield.in_covered_area"
 @override_settings(CACHES={"default": {"BACKEND": _locmemcache}})
 class NeedsIrrigationTestCase(TestCase):
     def setUp(self):
-        self.agrifield = mommy.make(Agrifield, id=1)
+        self.agrifield = mommy.make(models.Agrifield, id=1)
 
     def _set_needed_irrigation_amount(self, amount):
         atimeseries = pd.Series(data=[amount], index=pd.DatetimeIndex(["2020-01-15"]))
@@ -375,7 +366,7 @@ class LastIrrigationIsOutdatedTestCase(DataTestCase):
         cache.set("model_run_1", self.results)
 
     def test_true_if_no_irrigation(self, m):
-        AppliedIrrigation.objects.all().delete()
+        models.AppliedIrrigation.objects.all().delete()
         self.assertTrue(self.agrifield.last_irrigation_is_outdated)
 
     def test_true_if_irrigation_too_old(self, m):
@@ -388,3 +379,106 @@ class LastIrrigationIsOutdatedTestCase(DataTestCase):
 
     def test_false_if_irrigation_ok(self, m):
         self.assertFalse(self.agrifield.last_irrigation_is_outdated)
+
+
+def mock_calculate_soil_water(**kwargs):
+    timeseries = kwargs["timeseries"]
+    timeseries["dr"] = 0
+    timeseries["theta"] = 0
+    timeseries["ks"] = 0
+    timeseries["recommended_net_irrigation"] = 0
+    return {"raw": 0, "taw": 0, "timeseries": timeseries}
+
+
+@patch("aira.agrifield.calculate_soil_water", side_effect=mock_calculate_soil_water)
+class InitialConditionsTestCase(DataTestCase):
+    def tearDown(self):
+        self._remove_initial_theta_rasters()
+
+    def _check_theta_init(self, m, theta_init):
+        calls = m.call_args_list
+        self.assertEqual(len(calls), 2)
+        for call in calls:
+            call_kwargs = list(call)[1]
+            self.assertAlmostEqual(call_kwargs["theta_init"], theta_init)
+
+    def _check_starting_date(self, m, starting_date):
+        calls = m.call_args_list
+        self.assertEqual(len(calls), 2)
+        for call in calls:
+            call_kwargs = list(call)[1]
+            self.assertEqual(call_kwargs["timeseries"].index[0], starting_date)
+
+    def test_when_initial_theta_is_absent_we_start_from_field_capacity(self, m):
+        self.agrifield.execute_model()
+        self._check_theta_init(m, theta_init=0.4)
+
+    def test_when_initial_theta_is_absent_we_start_from_15_march(self, m):
+        self.agrifield.execute_model()
+        self._check_starting_date(m, starting_date=dt.date(2018, 3, 15))
+
+    def test_when_initial_theta_is_present_we_start_from_initial_theta(self, m):
+        self._setup_initial_theta_raster("2018-03-17")
+        self.agrifield.execute_model()
+        self._check_theta_init(m, theta_init=0.49)
+
+    def test_when_initial_theta_is_present_we_start_from_specified_date(self, m):
+        self._setup_initial_theta_raster("2018-03-17")
+        self.agrifield.execute_model()
+        self._check_starting_date(m, starting_date=dt.date(2018, 3, 17))
+
+    def test_when_initial_theta_file_has_garbage_date_we_ignore_it(self, m):
+        self._setup_initial_theta_raster("garb-ag-ee")
+        self.agrifield.execute_model()
+        self._check_starting_date(m, starting_date=dt.date(2018, 3, 15))
+
+    def test_when_there_are_two_initial_theta_files_we_take_the_most_recent(self, m):
+        self._setup_initial_theta_raster("2018-03-16")
+        self._setup_initial_theta_raster("2018-03-17")
+        self.agrifield.execute_model()
+        self._check_starting_date(m, starting_date=dt.date(2018, 3, 17))
+
+    def test_when_there_are_two_initial_theta_files_we_take_the_non_garbage(self, m):
+        self._setup_initial_theta_raster("2018-03-17")
+        self._setup_initial_theta_raster("garb-ag-ee")
+        self.agrifield.execute_model()
+        self._check_starting_date(m, starting_date=dt.date(2018, 3, 17))
+
+    def _setup_initial_theta_raster(self, date):
+        self.initial_theta_filename = os.path.join(self.tempdir, f"theta-{date}.tif")
+        setup_input_file(
+            self.initial_theta_filename, np.array([[0.49, 0.48], [0.47, 0.46]]), None
+        )
+
+    def _remove_initial_theta_rasters(self):
+        for filename in glob(os.path.join(self.tempdir, "theta-????-??-??.tif")):
+            os.remove(filename)
+
+
+class StartOfSeasonTestCase(TestCase):
+    def setUp(self):
+        self.agrifield = mommy.make(models.Agrifield)
+
+    @freeze_time("2018-01-01 13:00:01")
+    def test_jan_1(self):
+        self.assertEqual(
+            InitialConditions(self.agrifield).date, dt.datetime(2017, 3, 15, 0, 0)
+        )
+
+    @freeze_time("2018-03-14 13:00:01")
+    def test_mar_14(self):
+        self.assertEqual(
+            InitialConditions(self.agrifield).date, dt.datetime(2017, 3, 15, 0, 0)
+        )
+
+    @freeze_time("2018-03-15 13:00:01")
+    def test_mar_15(self):
+        self.assertEqual(
+            InitialConditions(self.agrifield).date, dt.datetime(2018, 3, 15, 0, 0)
+        )
+
+    @freeze_time("2018-12-31 13:00:01")
+    def test_dec_31(self):
+        self.assertEqual(
+            InitialConditions(self.agrifield).date, dt.datetime(2018, 3, 15, 0, 0)
+        )

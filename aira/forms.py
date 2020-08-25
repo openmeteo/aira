@@ -1,3 +1,5 @@
+from io import StringIO
+
 from django import forms
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
@@ -29,10 +31,34 @@ class ProfileForm(forms.ModelForm):
         }
 
 
+class DateInputWithoutYear(forms.DateInput):
+    def __init__(self, attrs=None, format=None):
+        if format is None:
+            format = "%d/%m"
+        super().__init__(attrs=attrs, format=format)
+
+    def value_from_datadict(self, data, files, name):
+        input = data.get(name)
+        if input:
+            day, month = input.split("/")
+            return f"1970-{month}-{day}"
+
+
 class AgrifieldForm(forms.ModelForm):
     location = LatLonField(
         label=_("Co-ordinates"),
         help_text=_("Longitude and latitude in decimal degrees"),
+    )
+    kc_stages = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+        label=_("Kc stages"),
+        help_text=_(
+            "The development stages. You can copy/paste them from a spreadsheet, "
+            "two columns: stage length in days and Kc at end of stage. Copy and paste "
+            "the points only, without headings. If you key them in instead, they must "
+            "be one stage per line, first days then Kc, separated by tab or comma."
+        ),
     )
 
     class Meta:
@@ -46,6 +72,10 @@ class AgrifieldForm(forms.ModelForm):
             "irrigation_type",
             "is_virtual",
             "use_custom_parameters",
+            "custom_planting_date",
+            "custom_kc_offseason",
+            "custom_kc_initial",
+            "kc_stages",
             "custom_irrigation_optimizer",
             "custom_root_depth_max",
             "custom_root_depth_min",
@@ -56,7 +86,6 @@ class AgrifieldForm(forms.ModelForm):
             "custom_wilting_point",
             "soil_analysis",
         ]
-
         labels = {
             "name": _("Field name"),
             "is_virtual": _("Is this a virtual field?"),
@@ -65,6 +94,10 @@ class AgrifieldForm(forms.ModelForm):
             "irrigation_type": _("Irrigation type"),
             "area": _("Irrigated area (m²)"),
             "use_custom_parameters": _("Use custom parameters"),
+            "custom_planting_date": _("Planting date"),
+            "custom_kc_offseason": _("Kc off-season"),
+            "custom_kc_initial": _("Kc initial"),
+            "kc_stages": _("Kc stages"),
             "custom_irrigation_optimizer": _("Irrigation optimizer"),
             "custom_root_depth_max": _("Estimated root depth (max)"),
             "custom_root_depth_min": _("Estimated root depth (min)"),
@@ -75,14 +108,43 @@ class AgrifieldForm(forms.ModelForm):
             "custom_wilting_point": _("Permanent wilting point"),
             "soil_analysis": _("Soil analysis document"),
         }
+        widgets = {
+            "custom_planting_date": DateInputWithoutYear(),
+        }
 
-    def clean(self):
-        cleaned_data = super(AgrifieldForm, self).clean()
-        is_virtual = cleaned_data.get("is_virtual")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.initial["kc_stages"] = self.instance.kc_stages_str
 
-        if is_virtual is None:
+    def clean_kc_stages(self):
+        data = self.cleaned_data["kc_stages"]
+        for i, row in enumerate(StringIO(data)):
+            row = row.replace("\t", ",")
+            try:
+                items = row.split(",")
+                int(items[0])
+                float(items[1])
+            except (ValueError, IndexError):
+                raise forms.ValidationError(
+                    _(
+                        f'Error in line {i + 1}: "{row}" is not a valid '
+                        "(ndays, kc_end) pair"
+                    )
+                )
+        return data
+
+    def clean_is_virtual(self):
+        result = self.cleaned_data.get("is_virtual")
+        if result is None:
             msg = _("You must select if field is virtual or not")
             self.add_error("is_virtual", msg)
+        return result
+
+    def save(self, *args, **kwargs):
+        result = super().save(*args, **kwargs)
+        self.instance.set_custom_kc_stages(self.cleaned_data["kc_stages"])
+        return result
 
 
 class AppliedIrrigationForm(forms.ModelForm):
