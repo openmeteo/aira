@@ -194,7 +194,7 @@ class CropTypeKcStagesTestCase(TestCase):
         )
         for i, s in enumerate([(35, 0.7), (45, 1.05), (40, 1.05), (15, 0.95)], start=1):
             models.CropTypeKcStage.objects.create(
-                crop_type=self.crop_type, order=i, ndays=s[0], kc_end=s[1],
+                crop_type=self.crop_type, order=i, ndays=s[0], kc_end=s[1]
             )
 
     def test_kc_stages(self):
@@ -328,7 +328,7 @@ class AppliedIrrigationTestCase(TestCase):
             "supplied_water_volume": 1337,
         }
         irrigation = mommy.make(
-            models.AppliedIrrigation, irrigation_type="VOLUME_OF_WATER", **kwargs,
+            models.AppliedIrrigation, irrigation_type="VOLUME_OF_WATER", **kwargs
         )
         self.assertEqual(irrigation.volume, 1337)
 
@@ -359,6 +359,6 @@ class AppliedIrrigationTestCase(TestCase):
         types = ["VOLUME_OF_WATER", "DURATION_OF_IRRIGATION", "FLOWMETER_READINGS"]
         for ir_type in types:
             irrigation = mommy.make(
-                models.AppliedIrrigation, irrigation_type="DURATION_OF_IRRIGATION",
+                models.AppliedIrrigation, irrigation_type="DURATION_OF_IRRIGATION"
             )
             self.assertIsNone(irrigation.volume)

@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
             options={"get_latest_by": "timestamp", "ordering": ("-timestamp",)},
         ),
         migrations.RenameField(
-            model_name="appliedirrigation", old_name="time", new_name="timestamp",
+            model_name="appliedirrigation", old_name="time", new_name="timestamp"
         ),
         migrations.RenameField(
             model_name="appliedirrigation",

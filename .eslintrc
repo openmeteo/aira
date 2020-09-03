@@ -3,6 +3,7 @@
     "env": {
         "browser": true,
         "jquery": true,
+        "jest": true,
     },
     "globals": {
         "aira": "writeable",
@@ -10,5 +11,6 @@
         "google": "readonly",
         "moment": "readonly",
         "L": "readonly",
+        "ApexCharts": "readonly",
     }
 }

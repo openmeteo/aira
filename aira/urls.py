@@ -23,7 +23,7 @@ urlpatterns = [
         views.UpdateProfileView.as_view(),
         name="update_profile",
     ),
-    path("delete_user/<int:pk>/", views.DeleteUserView.as_view(), name="delete_user",),
+    path("delete_user/<int:pk>/", views.DeleteUserView.as_view(), name="delete_user"),
     # Agrifield
     path(
         "create_agrifield/<str:username>/",
@@ -65,7 +65,7 @@ urlpatterns = [
         views.DeleteAppliedIrrigationView.as_view(),
         name="delete_irrlog",
     ),
-    path("conversion_tools/", views.ConversionToolsView.as_view(), name="tools",),
+    path("conversion_tools/", views.ConversionToolsView.as_view(), name="tools"),
     path("try/", views.DemoView.as_view(), name="try"),
     path(
         "irrigation-performance-chart/<int:pk>/",

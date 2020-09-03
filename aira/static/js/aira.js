@@ -355,3 +355,179 @@ aira.showAndHideIrrigationFieldsAccordingToType = () => {
     .forEach((input) => input.addEventListener('change', onIrrigationTypeChanged));
   onIrrigationTypeChanged(); // Called once at the start to display according to default choice
 };
+
+aira.kcCharter = {
+  initialize() {
+    this.initializeChart();
+    this.setupEvents();
+    this.updateChart();
+  },
+
+  initializeChart() {
+    const options = {
+      chart: { type: 'line', zoom: { enabled: false }, toolbar: { show: false } },
+      stroke: { width: 1.5 },
+      xaxis: { type: 'datetime', labels: { format: 'dd/MM' } },
+      markers: { size: 4 },
+      tooltip: {
+        enabled: true,
+        marker: { show: true },
+        x: { format: 'dd/MM' },
+        theme: 'dark',
+      },
+      series: this.getChartSeries(),
+    };
+    this.chart = new ApexCharts(document.querySelector('#kc-chart'), options);
+    this.chart.render();
+  },
+
+  setupEvents() {
+    document.querySelector('#id_custom_planting_date').onblur = this.updateChart;
+    document.querySelector('#id_custom_kc_initial').onblur = this.updateChart;
+    document.querySelector('#id_custom_kc_offseason').onblur = this.updateChart;
+    document.querySelector('#id_kc_stages').onblur = this.updateChart;
+  },
+
+  updateChart() {
+    const that = aira.kcCharter;
+    that.chart.updateSeries(that.getChartSeries());
+    that.updateYAxisOptions();
+  },
+
+  getChartSeries() {
+    this.plantingDate = this.getPlantingDate();
+    this.kcInitial = this.getParameterValue(
+      'id_custom_kc_initial', 'default-kc_initial', this.strToNum,
+    );
+    this.kcOffSeason = this.getParameterValue(
+      'id_custom_kc_offseason', 'default-kc_offseason', this.strToNum,
+    );
+    this.kcStages = this.getParameterValue(
+      'id_kc_stages', 'default-kc_stages', this.getKcStagesFromText,
+    );
+    this.data = [
+      { x: moment(this.plantingDate).subtract(5, 'days').toDate(), y: this.kcOffSeason },
+      { x: this.plantingDate, y: this.kcOffSeason },
+      { x: moment(this.plantingDate).add(1, 'second').toDate(), y: this.kcInitial },
+    ];
+    let date = moment(this.plantingDate);
+    this.kcStages.forEach((stage) => {
+      date = moment(date).add(stage.ndays, 'days');
+      this.data.push({ x: date.toDate(), y: stage.kcEnd });
+    });
+    return [{ name: 'Kc', data: this.data }];
+  },
+
+  getKcStagesFromText(kcStagesText) {
+    const lines = this.getCleanedKcStagesText(kcStagesText);
+    let pairs = lines.map((line) => line.split(','));
+    pairs = pairs.map((x) => ({
+      ndays: this.strToNum(x[0].trim()),
+      kcEnd: this.strToNum(x[1].trim()),
+    }));
+    if (pairs.length === 0) {
+      throw new Error('Invalid Kc stages');
+    }
+    return pairs;
+  },
+
+  getCleanedKcStagesText(kcStagesText) {
+    let text = kcStagesText;
+    text = this.removePTags(text);
+    text = this.replaceBrTags(text);
+    const lines = text.split('\n');
+    return lines.map(this.getCleanedKcStagesLine).filter((x) => x);
+  },
+
+  removePTags(text) {
+    let result = text.trim();
+    if (result.startsWith('<p>')) {
+      result = result.slice(3);
+    }
+    if (result.endsWith('</p>')) {
+      result = result.slice(0, -4);
+    }
+    return result;
+  },
+
+  replaceBrTags(text) {
+    return text.replace(/<br>/g, '\n');
+  },
+
+  getCleanedKcStagesLine(kcStagesLine) {
+    return kcStagesLine.trim().replace(/[ \t]/, ',');
+  },
+
+  getPlantingDate() {
+    const dayMonth = document.querySelector('#id_custom_planting_date').value;
+    try {
+      return this.getDateFromDayMonth(dayMonth);
+    } catch (e) {
+      return this.getDateFromDayMonth('15/03');
+    }
+  },
+
+  /**
+   * Given a "day/month" string, return the date with such year that it's closest to now
+   */
+  getDateFromDayMonth(dayMonth) {
+    const [day, month] = dayMonth.split('/').map((x) => this.strToNum(x));
+    return this.getClosestDateFromDayMonth(day, month);
+  },
+
+  /**
+   * Given day and month, return the date with such year that it's closest to now
+   */
+  getClosestDateFromDayMonth(day, month) {
+    const now = new Date(Date.now());
+    const currentYear = now.getFullYear();
+    let result = new Date(currentYear, month - 1, day);
+    const sixMonths = 15768e6;
+    if (Math.abs(result - now) > sixMonths) {
+      result = new Date(currentYear - 1, month - 1, day);
+    }
+    if (Math.abs(result - now) > sixMonths) {
+      result = new Date(currentYear + 1, month - 1, day);
+    }
+    return result;
+  },
+
+  getParameterValue(inputElementId, fallbackElementId, processingFunction) {
+    try {
+      return processingFunction.call(
+        this, document.querySelector(`#${inputElementId}`).value,
+      );
+    } catch (e) {
+      return processingFunction.call(
+        this, document.querySelector(`#${fallbackElementId}`).innerHTML,
+      );
+    }
+  },
+
+  strToNum(s) {
+    const trimmed = s.trim();
+    const result = Number(trimmed);
+    if (trimmed === '' || Number.isNaN(result)) {
+      throw new Error(`'${trimmed}' is not a valid number`);
+    }
+    return result;
+  },
+
+  updateYAxisOptions() {
+    const ymin = 0.1;
+    const ymax = this.roundToNextLargestTenth(Math.max(...this.data.map((point) => point.y)));
+    const tickAmount = Math.round((ymax - ymin) * 10);
+    this.chart.updateOptions({
+      yaxis: {
+        min: ymin,
+        max: ymax,
+        tickAmount,
+        title: { text: 'Kc' },
+      },
+    });
+  },
+
+  roundToNextLargestTenth(x) {
+    return Math.ceil(x * 10) / 10;
+  },
+};

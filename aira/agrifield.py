@@ -112,8 +112,7 @@ class AgrifieldSWBMixin:
         )
 
     def prepare_timeseries(self):
-        """Setup self.timeseries, a DataFrame with the data needed to run the model.
-        """
+        """Setup self.timeseries, a DataFrame with the data needed to run the model."""
         self.timeseries = pd.DataFrame()
         self._determine_evaporation()
         self._determine_effective_precipitation()

@@ -782,7 +782,7 @@ class IrrigationPerformanceCsvTestCase(DataTestCase):
 
 
 class CreateAppliedIrrigationViewTestCase(TestCase):
-    @patch("aira.models.Agrifield.get_applied_irrigation_defaults",)
+    @patch("aira.models.Agrifield.get_applied_irrigation_defaults")
     def test_applied_irrigation_defaults(self, mock):
         owner = User.objects.create_user(username="bob", password="topsecret")
         self.client.login(username="bob", password="topsecret")

@@ -111,7 +111,7 @@ class AgrifieldFormCleanKcStagesTestCase(TestCase):
 
     def test_validation_error_when_kc_end_is_absent(self):
         self._check_validation_error(
-            kc_stages="15", expected_message='"15" is not a valid (ndays, kc_end) pair',
+            kc_stages="15", expected_message='"15" is not a valid (ndays, kc_end) pair'
         )
 
     def test_validation_error_when_kc_end_is_wrong(self):
