@@ -902,6 +902,29 @@ class AgrifieldEditMapTestCase(SeleniumDataTestCase):
         self.assertNotEqual(new_latitude, original_latitude)
         self.assertNotEqual(new_longitude, original_longitude)
 
+    def test_agrifields_map_in_new_agrifields(self):
+        # Visit user's add agrifield list page
+        r = self.selenium.login(username="bob", password="topsecret")
+        self.assertTrue(r)
+        self.selenium.get(self.live_server_url + "/create_agrifield/bob/")
+        self.map_element.wait_until_exists()
+
+        # Check that latitude and longitude values are empty
+        self.assertEqual(self.latitude_element.get_attribute("value"), "")
+        self.assertEqual(self.longitude_element.get_attribute("value"), "")
+
+        # Click near the left edge of the map
+        x_offset = self.map_element.size["width"] / 2
+        y_offset = 20
+        ActionChains(self.selenium).move_to_element(
+            self.selenium.find_element(By.ID, "map")
+        ).move_by_offset(x_offset, y_offset).click().perform()
+        sleep(0.1)
+
+        # The co-ordinates should have been set
+        self.assertNotEqual(self.latitude_element.get_attribute("value"), "")
+        self.assertNotEqual(self.longitude_element.get_attribute("value"), "")
+
 
 @skipUnless(getattr(settings, "SELENIUM_WEBDRIVERS", False), "Selenium is unconfigured")
 class AddIrrigationTestCase(SeleniumDataTestCase):
