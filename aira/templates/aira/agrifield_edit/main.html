@@ -42,7 +42,7 @@
       ];
       aira.agrifieldEditMap.addAgrifields(aira.agrifields, "{{ object.name }}");
     {% else %}
-      aira.agrifieldEditMap.addAgrifields(map, [], "Add new field");
+      aira.agrifieldEditMap.addAgrifields([], "Add new field");
     {% endif %}
     aira.agrifieldEditMap.registerClickEvent();
     aira.agrifieldEditDocumentReady();
