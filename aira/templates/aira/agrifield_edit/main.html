@@ -27,6 +27,7 @@
 
 
 {% block extrajs %}
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.20.0/apexcharts.min.js"></script>
   <script type="text/javascript">
     aira.defaultBaseLayer = "Google Satellite";
     aira.agrifieldEditMap.create();
@@ -45,5 +46,6 @@
     {% endif %}
     aira.agrifieldEditMap.registerClickEvent();
     aira.agrifieldEditDocumentReady();
+    aira.kcCharter.initialize();
   </script>
 {% endblock %}

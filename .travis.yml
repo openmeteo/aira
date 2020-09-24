@@ -5,6 +5,9 @@ language: python
 python:
  - "3.7"
 
+node_js:
+ - 10
+
 addons:
   chrome: stable
   postgresql: "9.5"
@@ -29,6 +32,7 @@ install:
  - psql -U postgres -c "create extension postgis"
  - psql -U postgres -c "create database aira"
  - cp aira_project/settings/travis.py aira_project/settings/local.py
+ - nvm install 10
  - npm install
 
 env:
@@ -42,6 +46,7 @@ script:
  - isort --recursive --check-only --diff .
  - npm run lint
  - coverage run --include="./*" --omit="*/tests/*","*/tests.py","*/migrations/*","./aira_project/*" manage.py test -v2
+ - npm run test
 
 after_success:
  - codecov

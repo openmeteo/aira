@@ -85,10 +85,10 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameField(
-            model_name="agrifield", old_name="custom_kc", new_name="custom_kc_initial",
+            model_name="agrifield", old_name="custom_kc", new_name="custom_kc_initial"
         ),
         migrations.RenameField(
-            model_name="croptype", old_name="kc_init", new_name="kc_initial",
+            model_name="croptype", old_name="kc_init", new_name="kc_initial"
         ),
         migrations.AddField(
             model_name="croptype",
@@ -213,10 +213,10 @@ class Migration(migrations.Migration):
             name="kc_offseason",
             field=models.FloatField(null=False, verbose_name="Kc off-season"),
         ),
-        migrations.RemoveField(model_name="croptype", name="days_kc_dev",),
-        migrations.RemoveField(model_name="croptype", name="days_kc_init",),
-        migrations.RemoveField(model_name="croptype", name="days_kc_late",),
-        migrations.RemoveField(model_name="croptype", name="days_kc_mid",),
-        migrations.RemoveField(model_name="croptype", name="kc_end",),
-        migrations.RemoveField(model_name="croptype", name="kc_mid",),
+        migrations.RemoveField(model_name="croptype", name="days_kc_dev"),
+        migrations.RemoveField(model_name="croptype", name="days_kc_init"),
+        migrations.RemoveField(model_name="croptype", name="days_kc_late"),
+        migrations.RemoveField(model_name="croptype", name="days_kc_mid"),
+        migrations.RemoveField(model_name="croptype", name="kc_end"),
+        migrations.RemoveField(model_name="croptype", name="kc_mid"),
     ]

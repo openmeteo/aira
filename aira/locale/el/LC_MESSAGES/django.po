@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-25 10:24+0300\n"
+"POT-Creation-Date: 2020-09-24 13:42+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -67,13 +67,13 @@ msgid ""
 "The development stages. You can copy/paste them from a spreadsheet, two "
 "columns: stage length in days and Kc at end of stage. Copy and paste the "
 "points only, without headings. If you key them in instead, they must be one "
-"stage per line, first days then Kc, separated by tab or comma."
+"stage per line, first days then Kc, separated by space or tab."
 msgstr ""
 "Τα στάδια ανάπτυξης. Μπορείτε να τα αντιγράψετε από φύλλο εργασίας—δύο "
 "στήλες: μήκος σταδίου σε μέρες και Kc στο τέλος του σταδίου. Αντιγράψτε και "
 "επικολλήστε τα σημεία μόνο, χωρίς επικεφαλίδες. Αν τα πληκτρολογήσετε, "
-"πρέπει να είναι ένα στάδιο ανά γραμμή, μέρες και Kc, χωρισμένα με tab ή "
-"κόμμα."
+"πρέπει να είναι ένα στάδιο ανά γραμμή, μέρες και Kc, χωρισμένα με διάστημα ή "
+"tab."
 
 #: aira/forms.py:90 aira/templates/aira/recommendation/map.html:5
 msgid "Field name"
@@ -110,8 +110,8 @@ msgid "Kc off-season"
 msgstr "Kc εκτός περιόδου"
 
 #: aira/forms.py:99
-msgid "Kc initial"
-msgstr "Kc αρχικό"
+msgid "Kc on planting date"
+msgstr "Kc στην ημερομηνία φύτευσης"
 
 #: aira/forms.py:101
 #: aira/templates/aira/recommendation/fieldinfo_irrigationinfo.html:9
@@ -330,25 +330,25 @@ msgstr "Καλλιέργεια"
 #: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:15
 #: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:17
 #: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:19
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:21
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:23
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:25
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:27
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:22
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:24
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:26
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:28
 msgid "Default value for selected crop type"
 msgstr "Προκαθορισμένη τιμή για την επιλεχθείσα καλλιέργεια"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:27
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:28
 msgctxt "default Kc stages"
 msgid "Unspecified"
 msgstr "Μη προσδιορισμένη"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:30
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:31
 msgid "Soil"
 msgstr "Έδαφος"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:32
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:34
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:36
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:33
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:35
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:37
 msgid "Default value for selected location"
 msgstr "Προκαθορισμένη τιμή για την προσδιορισθείσα θέση"
 
