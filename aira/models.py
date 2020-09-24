@@ -97,7 +97,7 @@ class CropType(models.Model):
     root_depth_max = models.FloatField()
     root_depth_min = models.FloatField()
     max_allowed_depletion = models.FloatField()
-    kc_initial = models.FloatField()
+    kc_plantingdate = models.FloatField()
     kc_offseason = models.FloatField(verbose_name="Kc off-season")
     planting_date = models.DateField()
     fek_category = models.IntegerField()
@@ -180,7 +180,7 @@ class Agrifield(models.Model, AgrifieldSWBMixin, AgrifieldSWBResultsMixin):
         blank=True,
         validators=[MaxValueValidator(1.50), MinValueValidator(0.10)],
     )
-    custom_kc_initial = models.FloatField(
+    custom_kc_plantingdate = models.FloatField(
         null=True,
         blank=True,
         validators=[MaxValueValidator(1.50), MinValueValidator(0.10)],

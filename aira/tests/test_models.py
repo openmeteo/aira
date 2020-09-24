@@ -190,7 +190,7 @@ class CropTypeKcStagesTestCase(TestCase):
             models.CropType,
             planting_date=dt.datetime(1971, 3, 21),
             kc_offseason=0.3,
-            kc_initial=0.7,
+            kc_plantingdate=0.7,
         )
         for i, s in enumerate([(35, 0.7), (45, 1.05), (40, 1.05), (15, 0.95)], start=1):
             models.CropTypeKcStage.objects.create(

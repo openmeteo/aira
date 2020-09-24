@@ -383,7 +383,7 @@ aira.kcCharter = {
 
   setupEvents() {
     document.querySelector('#id_custom_planting_date').onblur = this.updateChart;
-    document.querySelector('#id_custom_kc_initial').onblur = this.updateChart;
+    document.querySelector('#id_custom_kc_plantingdate').onblur = this.updateChart;
     document.querySelector('#id_custom_kc_offseason').onblur = this.updateChart;
     document.querySelector('#id_kc_stages').onblur = this.updateChart;
   },
@@ -397,30 +397,43 @@ aira.kcCharter = {
   getChartSeries() {
     this.plantingDate = this.getPlantingDate();
     this.kcInitial = this.getParameterValue(
-      'id_custom_kc_initial', 'default-kc_initial', this.strToNum,
+      'id_custom_kc_plantingdate', 'default-kc_plantingdate', this.strToNum,
     );
     this.kcOffSeason = this.getParameterValue(
       'id_custom_kc_offseason', 'default-kc_offseason', this.strToNum,
     );
-    this.kcStages = this.getParameterValue(
-      'id_kc_stages', 'default-kc_stages', this.getKcStagesFromText,
-    );
+    this.kcStages = this.getKcStages();
     this.data = [
-      { x: moment(this.plantingDate).subtract(5, 'days').toDate(), y: this.kcOffSeason },
+      { x: moment(this.plantingDate).subtract(5 * 24, 'hours').toDate(), y: this.kcOffSeason },
       { x: this.plantingDate, y: this.kcOffSeason },
       { x: moment(this.plantingDate).add(1, 'second').toDate(), y: this.kcInitial },
     ];
     let date = moment(this.plantingDate);
     this.kcStages.forEach((stage) => {
-      date = moment(date).add(stage.ndays, 'days');
+      date = moment(date).add(stage.ndays * 24, 'hours');
       this.data.push({ x: date.toDate(), y: stage.kcEnd });
     });
+    const lastValue = this.data[this.data.length - 1].y;
+    this.data.push({ x: moment(date).add(5 * 24, 'hours').toDate(), y: lastValue });
     return [{ name: 'Kc', data: this.data }];
+  },
+
+  getKcStages() {
+    try {
+      return this.getKcStagesFromText(document.querySelector('#id_kc_stages').value);
+    } catch (e) {
+      // If no error we have returned; otherwise we just continue
+    }
+    try {
+      return this.getKcStagesFromText(document.querySelector('#default-kc_stages').innerHTML);
+    } catch (e) {
+      return [];
+    }
   },
 
   getKcStagesFromText(kcStagesText) {
     const lines = this.getCleanedKcStagesText(kcStagesText);
-    let pairs = lines.map((line) => line.split(','));
+    let pairs = lines.map((line) => line.split('\t'));
     pairs = pairs.map((x) => ({
       ndays: this.strToNum(x[0].trim()),
       kcEnd: this.strToNum(x[1].trim()),
@@ -455,7 +468,7 @@ aira.kcCharter = {
   },
 
   getCleanedKcStagesLine(kcStagesLine) {
-    return kcStagesLine.trim().replace(/[ \t]/, ',');
+    return kcStagesLine.trim().replace(/[ \t]+/, '\t');
   },
 
   getPlantingDate() {
@@ -481,13 +494,13 @@ aira.kcCharter = {
   getClosestDateFromDayMonth(day, month) {
     const now = new Date(Date.now());
     const currentYear = now.getFullYear();
-    let result = new Date(currentYear, month - 1, day);
+    let result = new Date(Date.UTC(currentYear, month - 1, day));
     const sixMonths = 15768e6;
     if (Math.abs(result - now) > sixMonths) {
-      result = new Date(currentYear - 1, month - 1, day);
+      result = new Date(Date.UTC(currentYear - 1, month - 1, day));
     }
     if (Math.abs(result - now) > sixMonths) {
-      result = new Date(currentYear + 1, month - 1, day);
+      result = new Date(Date.UTC(currentYear + 1, month - 1, day));
     }
     return result;
   },
@@ -506,7 +519,8 @@ aira.kcCharter = {
 
   strToNum(s) {
     const trimmed = s.trim();
-    const result = Number(trimmed);
+    const transformed = trimmed.replace(',', '.');
+    const result = Number(transformed);
     if (trimmed === '' || Number.isNaN(result)) {
       throw new Error(`'${trimmed}' is not a valid number`);
     }
@@ -514,8 +528,8 @@ aira.kcCharter = {
   },
 
   updateYAxisOptions() {
-    const ymin = 0.1;
-    const ymax = this.roundToNextLargestTenth(Math.max(...this.data.map((point) => point.y)));
+    const ymin = this.roundToPrevSmallerTenth(Math.min(...this.data.map((point) => point.y))) - 0.1;
+    const ymax = this.roundToNextLargerTenth(Math.max(...this.data.map((point) => point.y))) + 0.1;
     const tickAmount = Math.round((ymax - ymin) * 10);
     this.chart.updateOptions({
       yaxis: {
@@ -527,7 +541,11 @@ aira.kcCharter = {
     });
   },
 
-  roundToNextLargestTenth(x) {
+  roundToNextLargerTenth(x) {
     return Math.ceil(x * 10) / 10;
+  },
+
+  roundToPrevSmallerTenth(x) {
+    return Math.floor(x * 10) / 10;
   },
 };

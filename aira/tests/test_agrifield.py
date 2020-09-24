@@ -113,7 +113,7 @@ class SetupTestDataMixin:
             max_allowed_depletion=0.5,
             fek_category=4,
             kc_offseason=0.7,
-            kc_initial=0.7,
+            kc_plantingdate=0.7,
             planting_date=dt.date(2018, 3, 16),
         )
 
@@ -135,7 +135,7 @@ class SetupTestDataMixin:
             location=Point(22.0, 38.0),
             area=2000,
             custom_kc_offseason=0.3,
-            custom_kc_initial=0.35,
+            custom_kc_plantingdate=0.35,
             custom_planting_date=dt.date(1970, 3, 20),
         )
 

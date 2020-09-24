@@ -107,7 +107,7 @@ class AgrifieldSWBMixin:
             timeseries=self.timeseries,
             planting_date=self.crop_type.most_recent_planting_date,
             kc_offseason=self.crop_type.kc_offseason,
-            kc_initial=self.crop_type.kc_initial,
+            kc_plantingdate=self.crop_type.kc_plantingdate,
             kc_stages=self.crop_type.kc_stages,
         )
 

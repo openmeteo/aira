@@ -22,8 +22,8 @@
     <div class="help-block" style="margin-top: -10px">{% trans "Default value for selected crop type" %}: <span id="default-kc_offseason">{{ object.crop_type.kc_offseason }}</span></div>
     {% bootstrap_field form.custom_planting_date placeholder="day/month" %}
     <div class="help-block" style="margin-top: -10px">{% trans "Default value for selected crop type" %}: <span id="default-planting_date">{{ object.crop_type.planting_date|date:"j M" }}</span></div>
-    {% bootstrap_field form.custom_kc_initial placeholder="0.3 - 1.25" %}
-    <div class="help-block" style="margin-top: -10px">{% trans "Default value for selected crop type" %}: <span id="default-kc_initial">{{ object.crop_type.kc_initial }}</span></div>
+    {% bootstrap_field form.custom_kc_plantingdate placeholder="0.3 - 1.25" %}
+    <div class="help-block" style="margin-top: -10px">{% trans "Default value for selected crop type" %}: <span id="default-kc_plantingdate">{{ object.crop_type.kc_plantingdate }}</span></div>
     {% bootstrap_field form.kc_stages placeholder="" %}
     <div class="help-block" style="margin-top: -10px">{% trans "Default value for selected crop type" %}: {% if object.crop_type.kc_stages_str %}<div id="default-kc_stages">{{ object.crop_type.kc_stages_str|linebreaks }}</div>{% else %}<span id="default-kc_stages">{% trans "Unspecified" context "default Kc stages" %}</span>{% endif %}
   </fieldset>

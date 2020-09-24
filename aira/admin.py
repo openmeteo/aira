@@ -44,7 +44,7 @@ class CropTypeAdmin(admin.ModelAdmin):
         "name",
         "fek_category",
         "max_allowed_depletion",
-        "kc_initial",
+        "kc_plantingdate",
     )
     search_fields = ("name", "fek_category")
     list_filter = ("fek_category",)
@@ -52,7 +52,7 @@ class CropTypeAdmin(admin.ModelAdmin):
         ("name",),
         ("root_depth_min", "root_depth_max"),
         ("max_allowed_depletion"),
-        ("kc_offseason", "kc_initial", "planting_date"),
+        ("kc_offseason", "kc_plantingdate", "planting_date"),
         ("fek_category",),
     )
     inlines = [CropTypeKcStageInline]

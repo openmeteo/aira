@@ -171,19 +171,19 @@ class UpdateAgrifieldViewTestCase(DataTestCase):
             html=True,
         )
 
-    def test_kc_initial(self):
+    def test_kc_plantingdate(self):
         soup = BeautifulSoup(self.response.content, "html.parser")
-        kc_initial_element = soup.find("input", id="id_custom_kc_initial")
-        self.assertEqual(kc_initial_element.get("value"), "0.35")
+        kc_plantingdate_element = soup.find("input", id="id_custom_kc_plantingdate")
+        self.assertEqual(kc_plantingdate_element.get("value"), "0.35")
 
-    def test_kc_initial_placeholder(self):
+    def test_kc_plantingdate_placeholder(self):
         soup = BeautifulSoup(self.response.content, "html.parser")
-        kc_initial_element = soup.find("input", id="id_custom_kc_initial")
-        self.assertEqual(kc_initial_element.get("placeholder"), "0.3 - 1.25")
+        kc_plantingdate_element = soup.find("input", id="id_custom_kc_plantingdate")
+        self.assertEqual(kc_plantingdate_element.get("placeholder"), "0.3 - 1.25")
 
-    def test_default_kc_initial(self):
+    def test_default_kc_plantingdate(self):
         self.assertContains(
-            self.response, '<span id="default-kc_initial">0.7</span>', html=True
+            self.response, '<span id="default-kc_plantingdate">0.7</span>', html=True
         )
 
     def test_kc_offseason(self):

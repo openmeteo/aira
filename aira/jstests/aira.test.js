@@ -10,7 +10,7 @@ aira = {};
 require('../static/js/aira');
 
 const savedDateNow = Date.now.bind(global.Date);
-const getDate = (year, month, day) => new Date(year, month - 1, day);
+const getDate = (year, month, day) => new Date(Date.UTC(year, month - 1, day));
 const mockCurrentDate = (year, month, day) => {
   const mockDateNow = jest.fn(() => getDate(year, month, day).valueOf());
   global.Date.now = mockDateNow;
@@ -24,7 +24,7 @@ describe('initializeChart', () => {
     document.body.innerHTML = `
       <div id="kc-chart"></div>
       <input id="id_custom_planting_date" value="15/03">
-      <input id="id_custom_kc_initial" value="0.5">
+      <input id="id_custom_kc_plantingdate" value="0.5">
       <input id="id_custom_kc_offseason" value="0.4">
       <textarea id="id_kc_stages">20,0.5\n10,0.6</textarea>
     `;
@@ -49,9 +49,9 @@ describe('updateChart', () => {
   beforeAll(() => {
     document.body.innerHTML = `
       <input id="id_custom_planting_date" value="15/03">
-      <input id="id_custom_kc_initial" value="0.5">
+      <input id="id_custom_kc_plantingdate" value="0.5">
       <input id="id_custom_kc_offseason" value="0.4">
-      <textarea id="id_kc_stages">20,0.5\n10,0.52</textarea>
+      <textarea id="id_kc_stages">20 0.5\n10 0.52</textarea>
     `;
     mockCurrentDate(2018, 5, 5);
     aira.kcCharter.initialize();
@@ -65,27 +65,21 @@ describe('updateChart', () => {
     expect(aira.kcCharter.chart.updateOptions).toHaveBeenCalled();
   });
 
-  test('sets min yaxis to 0.1', () => {
-    expect(aira.kcCharter.chart.updateOptions.mock.calls[0][0].yaxis.min).toBe(0.1);
+  test('sets min yaxis to 0.3', () => {
+    expect(aira.kcCharter.chart.updateOptions.mock.calls[0][0].yaxis.min).toBeCloseTo(0.3);
   });
 
-  test('sets max yaxis to 0.6', () => {
-    expect(aira.kcCharter.chart.updateOptions.mock.calls[0][0].yaxis.max).toBe(0.6);
+  test('sets max yaxis to 0.7', () => {
+    expect(aira.kcCharter.chart.updateOptions.mock.calls[0][0].yaxis.max).toBeCloseTo(0.7);
   });
 
-  test('sets tickAmount to 5', () => {
-    expect(aira.kcCharter.chart.updateOptions.mock.calls[0][0].yaxis.tickAmount).toBe(5);
+  test('sets tickAmount to 4', () => {
+    expect(aira.kcCharter.chart.updateOptions.mock.calls[0][0].yaxis.tickAmount).toBe(4);
   });
 });
 
 describe('getChartSeries', () => {
   beforeAll(() => {
-    document.body.innerHTML = `
-      <input id="id_custom_planting_date" value="15/03">
-      <input id="id_custom_kc_initial" value="0.5">
-      <input id="id_custom_kc_offseason" value="0.4">
-      <textarea id="id_kc_stages">20,0.5\n10,0.6</textarea>
-    `;
     mockCurrentDate(2018, 5, 5);
   });
 
@@ -93,19 +87,48 @@ describe('getChartSeries', () => {
     unmockCurrentDate();
   });
 
-  test('creates series properly', () => {
+  const setUpDocumentBodyWithDotAsDecimalDelimiter = () => {
+    document.body.innerHTML = `
+      <input id="id_custom_planting_date" value="15/03">
+      <input id="id_custom_kc_plantingdate" value="0.5">
+      <input id="id_custom_kc_offseason" value="0.4">
+      <textarea id="id_kc_stages">20 0.5\n10 0.6</textarea>
+    `;
+  };
+
+  const setUpDocumentBodyWithCommaAsDecimalDelimiter = () => {
+    document.body.innerHTML = `
+      <input id="id_custom_planting_date" value="15/03">
+      <input id="id_custom_kc_plantingdate" value="0,5">
+      <input id="id_custom_kc_offseason" value="0,4">
+      <textarea id="id_kc_stages">20 0,5\n10 0,6</textarea>
+    `;
+  };
+
+  const checkResults = () => {
     expect(aira.kcCharter.getChartSeries()).toEqual(
       [{
         name: 'Kc',
         data: [
           { x: getDate(2018, 3, 10), y: 0.4 },
           { x: getDate(2018, 3, 15), y: 0.4 },
-          { x: new Date(2018, 3 - 1, 15, 0, 0, 1), y: 0.5 },
+          { x: new Date(Date.UTC(2018, 3 - 1, 15, 0, 0, 1)), y: 0.5 },
           { x: getDate(2018, 4, 4), y: 0.5 },
           { x: getDate(2018, 4, 14), y: 0.6 },
+          { x: getDate(2018, 4, 19), y: 0.6 },
         ],
       }],
     );
+  };
+
+  test('creates series properly when dot is decimal delimiter', () => {
+    setUpDocumentBodyWithDotAsDecimalDelimiter();
+    checkResults();
+  });
+
+  test('creates series properly when comma is decimal delimiter', () => {
+    setUpDocumentBodyWithCommaAsDecimalDelimiter();
+    checkResults();
   });
 });
 
@@ -128,12 +151,12 @@ describe('getKcStagesFromText', () => {
     check('25 0.7\n15 0.3\n5 0.25');
   });
 
-  test('reads comma-delimited text', () => {
-    check('25,0.7\n15,0.3\n5,0.25');
+  test('ignores leading and trailing spaces', () => {
+    check('  25 0.7  \n  15 0.3  \n  5\t0.25 ');
   });
 
-  test('ignores leading and trailing spaces', () => {
-    check('  25 0.7  \n  15,0.3  \n  5\t0.25 ');
+  test('ignores multiple spaces', () => {
+    check('25     0.7\n15 \t0.3\n5\t\t\t0.25');
   });
 
   test('ignores trailing newline', () => {
@@ -150,6 +173,16 @@ describe('getKcStagesFromText', () => {
 
   test('works when wrapped in a <p>', () => {
     check('<p>25 0.7<br>15 0.3<br>5 0.25</p>');
+  });
+});
+
+describe('getKcStages', () => {
+  test('returns empty when unparsable', () => {
+    document.body.innerHTML = `
+      <input id="id_kc_stages" value="unparsable">
+      <div id="default-kc_stages">Unspecified</div>
+    `;
+    expect(aira.kcCharter.getKcStages()).toEqual([]);
   });
 });
 
@@ -232,5 +265,9 @@ describe('strToNum', () => {
 
   test('throws error on empty', () => {
     expect(() => aira.kcCharter.strToNum('')).toThrowError();
+  });
+
+  test('treats comma as possible delimiter', () => {
+    expect(aira.kcCharter.strToNum('15,2')).toBe(15.2);
   });
 });
