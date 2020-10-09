@@ -3,7 +3,7 @@
 <div class="row">
   <div class="col-md-3">
     <p>
-      <b>{% trans "View historical available data" %}</b><br>
+      <b>{% trans "Climate data" %}</b><br>
       <sub>{% trans "Time period" %}: <span class="text-success">{{ start_date|date:"Y-m-d" }}</span> : <span class="text-success">{{ end_date|date:"Y-m-d" }}</span></sub>
     <p>
   </div>
@@ -21,7 +21,7 @@
     <div id="raster-selector-daily" class="form-group">
       <select id="dailyMeteoVar" class="form-control" onchange="aira.meteoMapPanel.updateMeteoLayer()">
         <option value="Daily_rain_">{% trans "Daily rainfall" %} (mm/d)</option>
-        <option value="Daily_evaporation_">{% trans "Daily potential evapotranspiration" %} (mm/d)</option>
+        <option value="Daily_evaporation_">{% trans "Daily reference evapotranspiration" %} (mm/d)</option>
         <option value="Daily_humidity_">{% trans "Daily humidity" %} (%)</option>
         <option value="Daily_temperature_">{% trans "Daily temperature" %} (°C)</option>
         <option value="Daily_wind_speed_">{% trans "Daily wind speed" %} (m/s)</option>
@@ -31,7 +31,7 @@
     <div id="raster-selector-monthly" >
       <div class="form-group">
         <select id="monthlyMeteoVar" class="form-control" onchange="aira.meteoMapPanel.updateMeteoLayer()">
-          <option value="Monthly_evaporation_">{% trans "Monthly potential evapotranspiration" %} (mm/month)</option>
+          <option value="Monthly_evaporation_">{% trans "Monthly reference evapotranspiration" %} (mm/month)</option>
         </select>
       </div>
     </div>

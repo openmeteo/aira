@@ -52,7 +52,8 @@ aira.map = {
 
   addMapControls() {
     L.control.scale().addTo(this.leafletMap);
-    L.control.layers(this.baseLayers).addTo(this.leafletMap);
+    this.layerSwitcher = L.control.layers(this.baseLayers);
+    this.layerSwitcher.addTo(this.leafletMap);
   },
 
   centerMap() {
@@ -83,7 +84,9 @@ aira.map = {
   },
 
   addCoveredAreaLayer(kmlUrl) {
-    new L.KML(kmlUrl).addTo(this.leafletMap);
+    const coveredAreaLayer = new L.KML(kmlUrl);
+    coveredAreaLayer.addTo(this.leafletMap);
+    this.layerSwitcher.addOverlay(coveredAreaLayer, aira.strings.covered_area);
   },
 };
 
@@ -146,7 +149,7 @@ aira.meteoMapPanel = {
   get activeTimestep() { return this.timestepToggle.getAttribute('current-timestep'); },
   get otherTimestep() { return this.activeTimestep === 'daily' ? 'monthly' : 'daily'; },
   get dateFormat() { return this.activeTimestep === 'daily' ? 'YYYY-MM-DD' : 'YYYY-MM'; },
-  get activeDate() { return this.dateSelector.value; },
+  get activeDate() { return document.getElementById('current-date').textContent; },
   get mapserverSubdir() { return this.activeTimestep === 'daily' ? 'historical/' : 'historical/monthly'; },
   get mapserverUrl() {
     let result = aira.mapserverBaseUrl + this.mapserverSubdir;
@@ -154,6 +157,9 @@ aira.meteoMapPanel = {
     return result;
   },
   get meteoVarElement() { return document.getElementById(this.activeTimestep === 'daily' ? 'dailyMeteoVar' : 'monthlyMeteoVar'); },
+  get meteoVarElementSelectedOption() {
+    return this.meteoVarElement.options[this.meteoVarElement.selectedIndex];
+  },
   get layersToRequest() { return this.meteoVarElement.value + this.activeDate; },
   get activeDateIndicator() { return document.getElementById('current-date'); },
 
@@ -209,8 +215,12 @@ aira.meteoMapPanel = {
       format: 'image/png',
       transparent: true,
       opacity: 0.65,
+      zIndex: 100,
     });
     this.currentMeteoLayer.addTo(aira.map.leafletMap);
+    aira.map.layerSwitcher.addOverlay(
+      this.currentMeteoLayer, this.meteoVarElementSelectedOption.innerText,
+    );
   },
 
   showPopup(e) {
