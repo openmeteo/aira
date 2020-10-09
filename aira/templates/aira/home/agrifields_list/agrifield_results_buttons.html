@@ -15,12 +15,12 @@
       {% trans "Weather history" %} <span class="caret"></span>
     </button>
     <ul class="dropdown-menu">
-      <li><a href="{% url "agrifield-timeseries" f.id "temperature" %}">{% trans "Temperature" %}</a></li>
-      <li><a href="{% url "agrifield-timeseries" f.id "humidity" %}">{% trans "Humidity" %}</a></li>
-      <li><a href="{% url "agrifield-timeseries" f.id "rain" %}">{% trans "Precipitation" %}</a></li>
+      <li><a href="{% url "agrifield-timeseries" f.id "temperature" %}">{% trans "Air temperature" %}</a></li>
+      <li><a href="{% url "agrifield-timeseries" f.id "humidity" %}">{% trans "Relative humidity" %}</a></li>
+      <li><a href="{% url "agrifield-timeseries" f.id "rain" %}">{% trans "Rainfall" %}</a></li>
       <li><a href="{% url "agrifield-timeseries" f.id "solar_radiation" %}">{% trans "Solar radiation" %}</a></li>
       <li><a href="{% url "agrifield-timeseries" f.id "wind_speed" %}">{% trans "Wind speed" %}</a></li>
-      <li><a href="{% url "agrifield-timeseries" f.id "evaporation" %}">{% trans "Calculated evaporation" %}</a></li>
+      <li><a href="{% url "agrifield-timeseries" f.id "evaporation" %}">{% trans "Reference evapotranspiration" %}</a></li>
     </ul>
   </div>
 </div>

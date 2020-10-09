@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from captcha.fields import CaptchaField
 from geowidgets import LatLonField
-from registration.forms import RegistrationForm
+from registration.forms import RegistrationFormTermsOfService
 
 from .models import Agrifield, AppliedIrrigation, Profile
 
@@ -195,10 +195,11 @@ class AppliedIrrigationForm(forms.ModelForm):
                 self.add_error(field, _("This field is required."))
 
 
-class MyRegistrationForm(RegistrationForm):
-
-    """
-    Extension of the default registration form to include a captcha
-    """
-
+class MyRegistrationForm(RegistrationFormTermsOfService):
     captcha = CaptchaField(label=_("Are you human?"))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].help_text = _(
+            "150 characters or fewer. Letters, digits and @/./+/-/_ only."
+        )

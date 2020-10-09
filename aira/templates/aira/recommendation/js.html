@@ -3,7 +3,7 @@
 
 <script type="text/javascript">
   map = aira.agrifieldsMap.create();
-  aira.agrifieldsMap.addCoveredAreaLayer("%{ static 'kml/covered_area.kml' %}");
+  aira.agrifieldsMap.addCoveredAreaLayer("{% static 'kml/covered_area.kml' %}");
   aira.agrifields = [
     {
       name: "{{ object.name }}",
