@@ -1,10 +1,12 @@
+from io import StringIO
+
 from django import forms
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 
 from captcha.fields import CaptchaField
 from geowidgets import LatLonField
-from registration.forms import RegistrationForm
+from registration.forms import RegistrationFormTermsOfService
 
 from .models import Agrifield, AppliedIrrigation, Profile
 
@@ -29,10 +31,34 @@ class ProfileForm(forms.ModelForm):
         }
 
 
+class DateInputWithoutYear(forms.DateInput):
+    def __init__(self, attrs=None, format=None):
+        if format is None:
+            format = "%d/%m"
+        super().__init__(attrs=attrs, format=format)
+
+    def value_from_datadict(self, data, files, name):
+        input = data.get(name)
+        if input:
+            day, month = input.split("/")
+            return f"1970-{month}-{day}"
+
+
 class AgrifieldForm(forms.ModelForm):
     location = LatLonField(
         label=_("Co-ordinates"),
         help_text=_("Longitude and latitude in decimal degrees"),
+    )
+    kc_stages = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+        label=_("Kc stages"),
+        help_text=_(
+            "The development stages. You can copy/paste them from a spreadsheet, "
+            "two columns: stage length in days and Kc at end of stage. Copy and paste "
+            "the points only, without headings. If you key them in instead, they must "
+            "be one stage per line, first days then Kc, separated by space or tab."
+        ),
     )
 
     class Meta:
@@ -46,6 +72,10 @@ class AgrifieldForm(forms.ModelForm):
             "irrigation_type",
             "is_virtual",
             "use_custom_parameters",
+            "custom_planting_date",
+            "custom_kc_offseason",
+            "custom_kc_plantingdate",
+            "kc_stages",
             "custom_irrigation_optimizer",
             "custom_root_depth_max",
             "custom_root_depth_min",
@@ -56,7 +86,6 @@ class AgrifieldForm(forms.ModelForm):
             "custom_wilting_point",
             "soil_analysis",
         ]
-
         labels = {
             "name": _("Field name"),
             "is_virtual": _("Is this a virtual field?"),
@@ -65,6 +94,10 @@ class AgrifieldForm(forms.ModelForm):
             "irrigation_type": _("Irrigation type"),
             "area": _("Irrigated area (m²)"),
             "use_custom_parameters": _("Use custom parameters"),
+            "custom_planting_date": _("Planting date"),
+            "custom_kc_offseason": _("Kc off-season"),
+            "custom_kc_plantingdate": _("Kc on planting date"),
+            "kc_stages": _("Kc stages"),
             "custom_irrigation_optimizer": _("Irrigation optimizer"),
             "custom_root_depth_max": _("Estimated root depth (max)"),
             "custom_root_depth_min": _("Estimated root depth (min)"),
@@ -75,24 +108,53 @@ class AgrifieldForm(forms.ModelForm):
             "custom_wilting_point": _("Permanent wilting point"),
             "soil_analysis": _("Soil analysis document"),
         }
+        widgets = {
+            "custom_planting_date": DateInputWithoutYear(),
+        }
 
-    def clean(self):
-        cleaned_data = super(AgrifieldForm, self).clean()
-        is_virtual = cleaned_data.get("is_virtual")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.initial["kc_stages"] = self.instance.kc_stages_str
 
-        if is_virtual is None:
+    def clean_kc_stages(self):
+        data = self.cleaned_data["kc_stages"]
+        for i, row in enumerate(StringIO(data)):
+            row = row.replace("\t", " ")
+            try:
+                items = row.split()
+                int(items[0])
+                float(items[1].replace(",", "."))
+            except (ValueError, IndexError):
+                raise forms.ValidationError(
+                    _(
+                        f'Error in line {i + 1}: "{row}" is not a valid '
+                        "(ndays, kc_end) pair"
+                    )
+                )
+        return data
+
+    def clean_is_virtual(self):
+        result = self.cleaned_data.get("is_virtual")
+        if result is None:
             msg = _("You must select if field is virtual or not")
             self.add_error("is_virtual", msg)
+        return result
+
+    def save(self, *args, **kwargs):
+        result = super().save(*args, **kwargs)
+        self.instance.set_custom_kc_stages(self.cleaned_data["kc_stages"])
+        return result
 
 
 class AppliedIrrigationForm(forms.ModelForm):
-    LABLED_IRRIGATION_TYPES = [
-        ("VOLUME_OF_WATER", _("I want to specify the volume of water")),
-        ("DURATION_OF_IRRIGATION", _("I want to specify the duration of irrigation")),
-        ("FLOWMETER_READINGS", _("I want to register the flowmeter readings")),
+    IRRIGATION_TYPE_CHOICES = [
+        ("VOLUME_OF_WATER", _("Specify volume of irrigation water")),
+        ("DURATION_OF_IRRIGATION", _("Specify duration of irrigation")),
+        ("FLOWMETER_READINGS", _("Specify flowmeter readings")),
     ]
     irrigation_type = forms.ChoiceField(
-        widget=forms.RadioSelect(), choices=LABLED_IRRIGATION_TYPES, label=""
+        widget=forms.RadioSelect(), choices=IRRIGATION_TYPE_CHOICES, label=""
     )
 
     class Meta:
@@ -133,10 +195,11 @@ class AppliedIrrigationForm(forms.ModelForm):
                 self.add_error(field, _("This field is required."))
 
 
-class MyRegistrationForm(RegistrationForm):
-
-    """
-    Extension of the default registration form to include a captcha
-    """
-
+class MyRegistrationForm(RegistrationFormTermsOfService):
     captcha = CaptchaField(label=_("Are you human?"))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].help_text = _(
+            "150 characters or fewer. Letters, digits and @/./+/-/_ only."
+        )

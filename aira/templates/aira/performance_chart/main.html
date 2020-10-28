@@ -51,44 +51,44 @@
         labels: {format: '{value} mm'}
       },
       tooltip: {
-          headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-          pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-              '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
-          footerFormat: '</table>',
-          shared: true,
-          useHTML: true
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
       },
       plotOptions: {column: {pointPadding: 0.2, borderWidth: 5}},
       series: [{
-          "name": "{% trans 'Estimated irrigation water amount' %}",
-          "color": '#008000',
-          "data": [
-            {% localize off %}
-              {% for date, row in object.results.timeseries.iterrows %}
-                {{ row.ifinal_theoretical }} {% if not forloop.last %},{% endif %}
-              {% endfor %}
-            {% endlocalize %}
-          ]
+        "name": "{% trans 'Estimated irrigation water amount' %}",
+        "color": '#008000',
+        "data": [
+          {% localize off %}
+            {% for date, row in object.results.timeseries.iterrows %}
+              {{ row.ifinal_theoretical }} {% if not forloop.last %},{% endif %}
+            {% endfor %}
+          {% endlocalize %}
+        ]
       }, {
-          "name": "{% trans 'Applied irrigation water amount' %}",
-          "data": [
-            {% localize off %}
-              {% for date, row in object.results.timeseries.iterrows %}
-                {{ row.applied_irrigation|default:0 }} {% if not forloop.last %},{% endif %}
-              {% endfor %}
-            {% endlocalize %}
-          ]
+        "name": "{% trans 'Applied irrigation water amount' %}",
+        "data": [
+          {% localize off %}
+            {% for date, row in object.results.timeseries.iterrows %}
+              {{ row.applied_irrigation|default:0 }} {% if not forloop.last %},{% endif %}
+            {% endfor %}
+          {% endlocalize %}
+        ]
       },
       {
-          "name": "{% trans 'Effective precipitation' %}",
-          "color": '#4c4ca6',
-          "data": [
-            {% localize off %}
-              {% for date, row in object.results.timeseries.iterrows %}
-                {{ row.effective_precipitation }} {% if not forloop.last %},{% endif %}
-              {% endfor %}
-            {% endlocalize %}
-          ]
+        "name": "{% trans 'Effective precipitation' %}",
+        "color": '#4c4ca6',
+        "data": [
+          {% localize off %}
+            {% for date, row in object.results.timeseries.iterrows %}
+              {{ row.effective_precipitation }} {% if not forloop.last %},{% endif %}
+            {% endfor %}
+          {% endlocalize %}
+        ]
       }]
     });
   </script>

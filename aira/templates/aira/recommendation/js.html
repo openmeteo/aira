@@ -2,16 +2,14 @@
 {% load i18n %}
 
 <script type="text/javascript">
-    map = aira.mapModule.getMap("field_map");
-    aira.mapModule.addCoveredAreaLayer(map, "%{ static 'kml/covered_area.kml' %}");
-    aira.agrifields = [
-        {
-            name: "{{ object.name }}",
-            url: "#",
-            coords: [{{ object.location.coords|cut:"("|cut:")" }}],
-        }
-    ];
-    var agrifields_layer = aira.mapModule.addAgrifieldsToMap(
-        map, aira.agrifields, "{{ object.name }}"
-    );
+  map = aira.agrifieldsMap.create();
+  aira.agrifieldsMap.addCoveredAreaLayer("{% static 'kml/covered_area.kml' %}");
+  aira.agrifields = [
+    {
+      name: "{{ object.name }}",
+      url: "#",
+      coords: [{{ object.location.coords|cut:"("|cut:")" }}],
+    }
+  ];
+  aira.agrifieldsMap.addAgrifields(aira.agrifields, "{{ object.name }}");
 </script>

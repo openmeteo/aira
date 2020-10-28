@@ -12,77 +12,20 @@ from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.core.cache import cache
 from django.core.files.base import ContentFile
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 
-import numpy as np
 import pandas as pd
 import pytz
+from bs4 import BeautifulSoup
 from django_selenium_clean import PageElement, SeleniumTestCase
-from freezegun import freeze_time
-from hspatial.test import setup_test_raster
 from model_mommy import mommy
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 
-from aira.models import Agrifield, AppliedIrrigation
+from aira import views
+from aira.models import Agrifield, AppliedIrrigation, CropTypeKcStage
 from aira.tests import RandomMediaRootMixin
-from aira.tests.test_agrifield import DataTestCase
-
-
-class TestDataMixin:
-    def setUp(self):
-        super().setUp()
-        self.tempdir = tempfile.mkdtemp()
-        self.settings_overrider = override_settings(AIRA_DATA_SOIL=self.tempdir)
-        self.settings_overrider.__enter__()
-        self._create_rasters()
-        self._create_user()
-        self._create_agrifield()
-
-    def _create_user(self):
-        self.alice = User.objects.create_user(
-            id=54, username="alice", password="topsecret", is_active=True
-        )
-
-    def _create_agrifield(self):
-        self.agrifield = mommy.make(
-            Agrifield,
-            id=1,
-            name="hello",
-            location=Point(22.01, 37.99),
-            owner=self.alice,
-            irrigation_type__efficiency=0.85,
-            crop_type__max_allowed_depletion=0.40,
-            crop_type__root_depth_max=0.50,
-            crop_type__root_depth_min=0.30,
-            area=2000,
-        )
-
-    def tearDown(self):
-        self.settings_overrider.__exit__(None, None, None)
-        shutil.rmtree(self.tempdir)
-
-    def _create_rasters(self):
-        self._create_fc()
-        self._create_pwp()
-        self._create_theta_s()
-
-    def _create_fc(self):
-        setup_test_raster(
-            os.path.join(self.tempdir, "fc.tif"),
-            np.array([[0.20, 0.23, 0.26], [0.29, 0.32, 0.35], [0.38, 0.41, 0.44]]),
-        )
-
-    def _create_pwp(self):
-        setup_test_raster(
-            os.path.join(self.tempdir, "pwp.tif"),
-            np.array([[0.06, 0.07, 0.08], [0.09, 0.10, 0.11], [0.12, 0.13, 0.14]]),
-        )
-
-    def _create_theta_s(self):
-        setup_test_raster(
-            os.path.join(self.tempdir, "theta_s.tif"),
-            np.array([[0.38, 0.39, 0.40], [0.41, 0.42, 0.43], [0.44, 0.45, 0.46]]),
-        )
+from aira.tests.test_agrifield import DataTestCase, SetupTestDataMixin
 
 
 class TestFrontPageView(TestCase):
@@ -145,42 +88,50 @@ class TestAgrifieldListView(TestCase):
         self.assertTemplateUsed(resp, "aira/home/main.html")
 
 
-class UpdateAgrifieldViewTestCase(TestDataMixin, TestCase):
-    def setUp(self):
-        super().setUp()
-        self._make_request()
+class UpdateAgrifieldViewTestCase(DataTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls._create_crop_type_kc_stages()
+        cls._make_request()
 
-    def _make_request(self):
-        self.client.login(username="alice", password="topsecret")
-        self.response = self.client.get(
-            "/update_agrifield/{}/".format(self.agrifield.id)
-        )
+    @classmethod
+    def _create_crop_type_kc_stages(cls):
+        c = CropTypeKcStage.objects.create
+        c(crop_type=cls.crop_type, order=1, ndays=32, kc_end=0.6)
+        c(crop_type=cls.crop_type, order=2, ndays=42, kc_end=0.95)
+
+    @classmethod
+    def _make_request(cls):
+        cls.client = Client()
+        cls.client.login(username="bob", password="topsecret")
+        cls.response = cls.client.get("/update_agrifield/{}/".format(cls.agrifield.id))
 
     def test_response_contains_agrifield_name(self):
-        self.assertContains(self.response, "hello")
+        self.assertContains(self.response, "A field")
 
     def test_default_irrigation_efficiency(self):
         self.assertContains(
             self.response,
-            '<span id="default-irrigation-efficiency">0.85</span>',
+            '<span id="default-irrigation-efficiency">0.6</span>',
             html=True,
         )
 
     def test_default_max_allowed_depletion(self):
         self.assertContains(
             self.response,
-            '<span id="default-max_allowed_depletion">0.40</span>',
+            '<span id="default-max_allowed_depletion">0.50</span>',
             html=True,
         )
 
     def test_default_root_depth_max(self):
         self.assertContains(
-            self.response, '<span id="default-root_depth_max">0.5</span>', html=True
+            self.response, '<span id="default-root_depth_max">0.7</span>', html=True
         )
 
     def test_default_root_depth_min(self):
         self.assertContains(
-            self.response, '<span id="default-root_depth_min">0.3</span>', html=True
+            self.response, '<span id="default-root_depth_min">1.2</span>', html=True
         )
 
     def test_default_irrigation_optimizer(self):
@@ -192,7 +143,7 @@ class UpdateAgrifieldViewTestCase(TestDataMixin, TestCase):
 
     def test_default_field_capacity(self):
         self.assertContains(
-            self.response, '<span id="default-field-capacity">0.32</span>', html=True
+            self.response, '<span id="default-field-capacity">0.40</span>', html=True
         )
 
     def test_default_wilting_point(self):
@@ -202,7 +153,85 @@ class UpdateAgrifieldViewTestCase(TestDataMixin, TestCase):
 
     def test_default_theta_s(self):
         self.assertContains(
-            self.response, '<span id="default-theta_s">0.42</span>', html=True
+            self.response, '<span id="default-theta_s">0.50</span>', html=True
+        )
+
+    def test_kc_stages(self):
+        self.assertContains(self.response, "35\t0.7\n45\t1.05")
+
+    def test_kc_stages_placeholder(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        kc_stages_element = soup.find("textarea", id="id_kc_stages")
+        self.assertIsNone(kc_stages_element.get("placeholder"))
+
+    def test_default_kc_stages(self):
+        self.assertContains(
+            self.response,
+            '<div id="default-kc_stages"><p>32\t0.6<br>42\t0.95</p></div>',
+            html=True,
+        )
+
+    def test_kc_plantingdate(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        kc_plantingdate_element = soup.find("input", id="id_custom_kc_plantingdate")
+        self.assertEqual(kc_plantingdate_element.get("value"), "0.35")
+
+    def test_kc_plantingdate_placeholder(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        kc_plantingdate_element = soup.find("input", id="id_custom_kc_plantingdate")
+        self.assertEqual(kc_plantingdate_element.get("placeholder"), "0.3 - 1.25")
+
+    def test_default_kc_plantingdate(self):
+        self.assertContains(
+            self.response, '<span id="default-kc_plantingdate">0.7</span>', html=True
+        )
+
+    def test_kc_offseason(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        kc_offseason_element = soup.find("input", id="id_custom_kc_offseason")
+        self.assertEqual(kc_offseason_element.get("value"), "0.3")
+
+    def test_kc_offseason_placeholder(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        kc_offseason_element = soup.find("input", id="id_custom_kc_offseason")
+        self.assertEqual(kc_offseason_element.get("placeholder"), "0.3 - 1.25")
+
+    def test_default_kc_offseason(self):
+        self.assertContains(
+            self.response, '<span id="default-kc_offseason">0.7</span>', html=True
+        )
+
+    def test_kc_planting_date(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        planting_date_element = soup.find("input", id="id_custom_planting_date")
+        self.assertEqual(planting_date_element.get("value"), "20/03")
+
+    def test_planting_date_placeholder(self):
+        soup = BeautifulSoup(self.response.content, "html.parser")
+        planting_date_element = soup.find("input", id="id_custom_planting_date")
+        self.assertEqual(planting_date_element.get("placeholder"), "day/month")
+
+    def test_default_planting_date(self):
+        self.assertContains(
+            self.response, '<span id="default-planting_date">16 Mar</span>', html=True
+        )
+
+
+class UpdateAgrifieldViewWithEmptyDefaultKcStagesTestCase(DataTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls._make_request()
+
+    @classmethod
+    def _make_request(cls):
+        cls.client = Client()
+        cls.client.login(username="bob", password="topsecret")
+        cls.response = cls.client.get("/update_agrifield/{}/".format(cls.agrifield.id))
+
+    def test_default_kc_stages(self):
+        self.assertContains(
+            self.response, '<span id="default-kc_stages">Unspecified</span>', html=True
         )
 
 
@@ -322,9 +351,9 @@ class DownloadSoilAnalysisViewTestCase(TestCase, RandomMediaRootMixin):
         self.assertEqual(content, b"hello world")
 
 
-class RecommendationViewTestCase(TestDataMixin, TestCase):
+class RecommendationViewTestCase(DataTestCase):
     def _make_request(self):
-        self.client.login(username="alice", password="topsecret")
+        self.client.login(username="bob", password="topsecret")
         self.response = self.client.get("/recommendation/{}/".format(self.agrifield.id))
 
     def _update_agrifield(self, **kwargs):
@@ -337,7 +366,7 @@ class RecommendationViewTestCase(TestDataMixin, TestCase):
     def test_response_contains_default_root_depth(self):
         self._update_agrifield(use_custom_parameters=False)
         self._make_request()
-        self.assertContains(self.response, "<b>Estimated root depth (max):</b> 0.40 m")
+        self.assertContains(self.response, "<b>Estimated root depth (max):</b> 0.95 m")
 
     def test_response_contains_custom_root_depth(self):
         self._update_agrifield(
@@ -351,7 +380,7 @@ class RecommendationViewTestCase(TestDataMixin, TestCase):
     def test_response_contains_default_field_capacity(self):
         self._update_agrifield(use_custom_parameters=False)
         self._make_request()
-        self.assertContains(self.response, "<b>Field capacity:</b> 32.0%")
+        self.assertContains(self.response, "<b>Field capacity:</b> 40.0%")
 
     def test_response_contains_custom_field_capacity(self):
         self._update_agrifield(use_custom_parameters=True, custom_field_capacity=0.321)
@@ -362,7 +391,7 @@ class RecommendationViewTestCase(TestDataMixin, TestCase):
         self._update_agrifield(use_custom_parameters=False)
         self._make_request()
         self.assertContains(
-            self.response, "<b>Soil moisture at saturation (Θ<sub>s</sub>):</b> 42.0%"
+            self.response, "<b>Soil moisture at saturation (Θ<sub>s</sub>):</b> 50.0%"
         )
 
     def test_response_contains_custom_theta_s(self):
@@ -385,7 +414,7 @@ class RecommendationViewTestCase(TestDataMixin, TestCase):
     def test_response_contains_default_irrigation_efficiency(self):
         self._update_agrifield(use_custom_parameters=False)
         self._make_request()
-        self.assertContains(self.response, "<b>Irrigation efficiency:</b> 0.85")
+        self.assertContains(self.response, "<b>Irrigation efficiency:</b> 0.6")
 
     def test_response_contains_custom_irrigation_efficiency(self):
         self._update_agrifield(use_custom_parameters=True, custom_efficiency=0.88)
@@ -405,6 +434,7 @@ class RecommendationViewTestCase(TestDataMixin, TestCase):
         self.assertContains(self.response, "<b>Irrigation optimizer:</b> 0.55")
 
     def test_response_contains_no_last_irrigation(self):
+        self.agrifield.appliedirrigation_set.all().delete()
         self._make_request()
         self.assertContains(
             self.response, "<b>Last recorded irrigation:</b> Unspecified"
@@ -439,75 +469,92 @@ class RecommendationViewTestCase(TestDataMixin, TestCase):
         )
         self.assertContains(
             self.response,
-            "<b>Applied water (m³):</b> 23.0 "
+            "<b>Applied water (m³):</b> 93.2 "
             "(Irrigation water is estimated using system's "
             "default parameters.)",
         )
 
 
-class RemoveSupervisedUserTestCase(TestDataMixin, TestCase):
+class RemoveSupervisedUserTestCase(DataTestCase):
     def setUp(self):
         super().setUp()
         # Note: we give specific ids below to the users, to ensure the general case,
         # that profile ids are different from user ids.
-        self.bob = User.objects.create_user(id=55, username="bob", password="topsecret")
-        self.bob.profile.first_name = "Bob"
-        self.bob.profile.last_name = "Brown"
-        self.bob.profile.supervisor = self.alice
-        self.bob.profile.save()
         self.charlie = User.objects.create_user(
             id=56, username="charlie", password="topsecret"
         )
+        self.charlie.profile.first_name = "Charlie"
+        self.charlie.profile.last_name = "Clark"
+        self.charlie.profile.supervisor = self.user
+        self.charlie.profile.save()
+        self.david = User.objects.create_user(
+            id=57, username="david", password="topsecret"
+        )
 
-    def test_supervised_users_list_contains_bob(self):
-        self.client.login(username="alice", password="topsecret")
+    def test_supervised_users_list_contains_charlie(self):
+        self.client.login(username="bob", password="topsecret")
         response = self.client.get("/home/")
         self.assertContains(
-            response, '<a href="/home/bob/">bob (Bob Brown)</a>', html=True
+            response, '<a href="/home/charlie/">charlie (Charlie Clark)</a>', html=True
         )
 
-    def test_remove_bob_from_supervised(self):
-        assert User.objects.get(username="bob").profile.supervisor is not None
-        self.client.login(username="alice", password="topsecret")
+    def test_remove_charlie_from_supervised(self):
+        assert User.objects.get(username="charlie").profile.supervisor is not None
+        self.client.login(username="bob", password="topsecret")
         response = self.client.post(
-            "/supervised_user/remove/", data={"supervised_user_id": "55"}
+            "/supervised_user/remove/", data={"supervised_user_id": "56"}
         )
         self.assertEqual(response.status_code, 302)
-        self.assertIsNone(User.objects.get(username="bob").profile.supervisor)
+        self.assertIsNone(User.objects.get(username="charlie").profile.supervisor)
 
-    def test_attempting_to_remove_bob_when_not_logged_in_returns_404(self):
-        response = self.client.post(
-            "/supervised_user/remove/", data={"supervised_user_id": self.bob.id}
-        )
-        self.assertEqual(response.status_code, 404)
-        self.assertIsNotNone(User.objects.get(username="bob").profile.supervisor)
-
-    def test_attempting_to_remove_bob_when_logged_in_as_charlie_returns_404(self):
-        self.client.login(username="charlie", password="topsecret")
-        response = self.client.post(
-            "/supervised_user/remove/", data={"supervised_user_id": self.bob.id}
-        )
-        self.assertEqual(response.status_code, 404)
-        self.assertIsNotNone(User.objects.get(username="bob").profile.supervisor)
-
-    def test_attempting_to_remove_when_already_removed_returns_404(self):
-        self.client.login(username="alice", password="topsecret")
+    def test_attempting_to_remove_charlie_when_not_logged_in_returns_404(self):
         response = self.client.post(
             "/supervised_user/remove/", data={"supervised_user_id": self.charlie.id}
         )
         self.assertEqual(response.status_code, 404)
+        self.assertIsNotNone(User.objects.get(username="charlie").profile.supervisor)
+
+    def test_attempting_to_remove_charlie_when_logged_in_as_david_returns_404(self):
+        self.client.login(username="david", password="topsecret")
+        response = self.client.post(
+            "/supervised_user/remove/", data={"supervised_user_id": self.charlie.id}
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertIsNotNone(User.objects.get(username="charlie").profile.supervisor)
+
+    def test_attempting_to_remove_when_already_removed_returns_404(self):
+        self.client.login(username="bob", password="topsecret")
+        response = self.client.post(
+            "/supervised_user/remove/", data={"supervised_user_id": self.david.id}
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_attempting_to_remove_garbage_id_returns_404(self):
-        self.client.login(username="alice", password="topsecret")
+        self.client.login(username="bob", password="topsecret")
         response = self.client.post(
             "/supervised_user/remove/", data={"supervised_user_id": "garbage"}
         )
         self.assertEqual(response.status_code, 404)
 
     def test_posting_without_parameters_returns_404(self):
-        self.client.login(username="alice", password="topsecret")
+        self.client.login(username="bob", password="topsecret")
         response = self.client.post("/supervised_user/remove/")
         self.assertEqual(response.status_code, 404)
+
+
+class RegistrationViewTestCase(TestCase):
+    def test_template_is_overriden(self):
+        """Test that the correct template is used.
+
+        In INSTALLED_APPS, "aira" has to go before "registration" (which has to go
+        before "django.contrib.admin"), so that the registration templates are read from
+        aira/templates/registration and not from django-registration-redux. This is easy
+        to misconfigure, so we test it here.
+        """
+        response = self.client.get("/accounts/register/")
+        # Check the title. django-registration-redux's default is "Register for an
+        # account"
+        self.assertContains(response, "<title>Registration —")
 
 
 class ProfileViewsTestCase(TestCase):
@@ -532,15 +579,19 @@ class ProfileViewsTestCase(TestCase):
         self.assertFalse(User.objects.filter(username="bob").exists())
 
 
-class LastIrrigationOutsidePeriodWarningTestCase(TestDataMixin, TestCase):
+_locmemcache = "django.core.cache.backends.locmem.LocMemCache"
+
+
+@override_settings(CACHES={"default": {"BACKEND": _locmemcache}})
+class LastIrrigationOutsidePeriodWarningTestCase(DataTestCase):
     message = "You haven't registered any irrigation"
 
     def setUp(self):
         super().setUp()
-        self._create_irrigation_event()
+        self._create_applied_irrigation()
         self._login()
 
-    def _create_irrigation_event(self):
+    def _create_applied_irrigation(self):
         tz = pytz.timezone(settings.TIME_ZONE)
         mommy.make(
             AppliedIrrigation,
@@ -550,7 +601,7 @@ class LastIrrigationOutsidePeriodWarningTestCase(TestDataMixin, TestCase):
         )
 
     def _login(self):
-        self.client.login(username="alice", password="topsecret")
+        self.client.login(username="bob", password="topsecret")
 
     def _setup_results_between(self, start_date, end_date):
         df = pd.DataFrame(
@@ -581,7 +632,7 @@ class LastIrrigationOutsidePeriodWarningTestCase(TestDataMixin, TestCase):
 
 @skipUnless(getattr(settings, "SELENIUM_WEBDRIVERS", False), "Selenium is unconfigured")
 class DailyMonthlyToggleButtonTestCase(SeleniumTestCase):
-    toggle_button = PageElement(By.ID, "timestampSelectorBtn")
+    toggle_button = PageElement(By.ID, "timestep-toggle")
 
     def test_daily_monthly_toggle(self):
         self.selenium.get(self.live_server_url)
@@ -591,6 +642,68 @@ class DailyMonthlyToggleButtonTestCase(SeleniumTestCase):
         self.toggle_button.click()
         sleep(0.1)
         self.assertEqual(self.toggle_button.text, "Switch to daily")
+
+
+@skipUnless(getattr(settings, "SELENIUM_WEBDRIVERS", False), "Selenium is unconfigured")
+class DateChangingTestCase(SeleniumTestCase):
+    previous_date_button = PageElement(By.ID, "previous-date")
+    next_date_button = PageElement(By.ID, "next-date")
+    current_date_element = PageElement(By.ID, "current-date")
+    date_input_element = PageElement(By.ID, "date-input")
+    datetimepicker_2 = PageElement(
+        By.XPATH, '//div[@class="datetimepicker-days"]//td[text()="2"]'
+    )
+
+    def _check_button_values(self, previous, current, next):
+        self.assertEqual(self.current_date_element.text, current)
+        self._check_button(self.previous_date_button, previous)
+        self._check_button(self.next_date_button, next)
+
+    def _check_button(self, button, expected_value):
+        val = button.text
+        if not expected_value:
+            self.assertEqual(val, "")
+        else:
+            self.assertTrue(
+                val.startswith(expected_value) or val.endswith(expected_value)
+            )
+
+    def test_date_changing_buttons(self):
+        self.selenium.get(self.live_server_url)
+        self.previous_date_button.wait_until_exists()
+        self.current_date_element.wait_until_exists()
+        self.next_date_button.wait_until_exists()
+        self._check_button_values("2019-01-02", "2019-01-03", None)
+
+        self.previous_date_button.click()
+        sleep(0.1)
+        self._check_button_values("2019-01-01", "2019-01-02", "2019-01-03")
+
+        self.previous_date_button.click()
+        sleep(0.1)
+        self._check_button_values(None, "2019-01-01", "2019-01-02")
+
+        self.next_date_button.click()
+        sleep(0.1)
+        self._check_button_values("2019-01-01", "2019-01-02", "2019-01-03")
+
+        self.next_date_button.click()
+        sleep(0.1)
+        self._check_button_values("2019-01-02", "2019-01-03", None)
+
+    def test_specify_date(self):
+        self.selenium.get(self.live_server_url)
+        self.previous_date_button.wait_until_exists()
+        self.current_date_element.wait_until_exists()
+        self.next_date_button.wait_until_exists()
+        self._check_button_values("2019-01-02", "2019-01-03", None)
+
+        self.date_input_element.wait_until_exists()
+        self.date_input_element.click()
+        self.datetimepicker_2.wait_until_exists()
+        self.datetimepicker_2.click()
+        sleep(0.1)
+        self._check_button_values("2019-01-01", "2019-01-02", "2019-01-03")
 
 
 class ResetPasswordTestCase(TestCase):
@@ -604,18 +717,18 @@ class ResetPasswordTestCase(TestCase):
         self.assertEqual(r.status_code, 302)
 
 
-@freeze_time("2018-03-18 13:00:01")
 class IrrigationPerformanceChartTestCase(DataTestCase):
-    def setUp(self):
-        super().setUp()
-        self.client.login(username="bob", password="topsecret")
-        self.response = self.client.get(
-            f"/irrigation-performance-chart/{self.agrifield.id}/"
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.results = cls.agrifield.execute_model()
+        cls.client = Client()
+        cls.client.login(username="bob", password="topsecret")
+        cls.response = cls.client.get(
+            f"/irrigation-performance-chart/{cls.agrifield.id}/"
         )
-        assert self.response.status_code == 200
-        self.series = self._extract_series_from_javascript(
-            self.response.content.decode()
-        )
+        assert cls.response.status_code == 200
+        cls.series = cls._extract_series_from_javascript(cls.response.content.decode())
 
     _series_regexp = r"""
         \sseries:\s* # "series:" preceded by space and followed by optional whitespace.
@@ -627,8 +740,9 @@ class IrrigationPerformanceChartTestCase(DataTestCase):
         )
     """
 
-    def _extract_series_from_javascript(self, page_content):
-        m = re.search(self._series_regexp, page_content, re.VERBOSE)
+    @classmethod
+    def _extract_series_from_javascript(cls, page_content):
+        m = re.search(cls._series_regexp, page_content, re.VERBOSE)
         series = eval(m.group("series"))
         result = {x["name"]: x["data"] for x in series}
         return result
@@ -651,15 +765,17 @@ class IrrigationPerformanceChartTestCase(DataTestCase):
         self.assertEqual(total_applied_water, 375)
 
 
-@freeze_time("2018-03-18 13:00:01")
 class IrrigationPerformanceCsvTestCase(DataTestCase):
-    def setUp(self):
-        super().setUp()
-        self.client.login(username="bob", password="topsecret")
-        self.response = self.client.get(
-            f"/download-irrigation-performance/{self.agrifield.id}/"
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.results = cls.agrifield.execute_model()
+        cls.client = Client()
+        cls.client.login(username="bob", password="topsecret")
+        cls.response = cls.client.get(
+            f"/download-irrigation-performance/{cls.agrifield.id}/"
         )
-        assert self.response.status_code == 200
+        assert cls.response.status_code == 200
 
     def test_applied_water_when_irrigation_specified(self):
         m = re.search(
@@ -681,7 +797,7 @@ class IrrigationPerformanceCsvTestCase(DataTestCase):
 
 
 class CreateAppliedIrrigationViewTestCase(TestCase):
-    @patch("aira.models.Agrifield.get_applied_irrigation_defaults",)
+    @patch("aira.models.Agrifield.get_applied_irrigation_defaults")
     def test_applied_irrigation_defaults(self, mock):
         owner = User.objects.create_user(username="bob", password="topsecret")
         self.client.login(username="bob", password="topsecret")
@@ -695,3 +811,224 @@ class CreateAppliedIrrigationViewTestCase(TestCase):
         initials = response.context["form"].initial
         self.assertEqual(initials["supplied_water_volume"], 1337)
         self.assertEqual(initials["irrigation_type"], "HELLO_WORLD")
+
+
+@skipUnless(getattr(settings, "SELENIUM_WEBDRIVERS", False), "Selenium is unconfigured")
+@override_settings(AIRA_MAP_DEFAULT_CENTER=(22.01, 37.99))
+class MapPopupTestCase(SeleniumTestCase, DataTestCase):
+    map_element = PageElement(By.ID, "map")
+    popup_element = PageElement(By.CSS_SELECTOR, "div.leaflet-popup")
+
+    def setUp(self):
+        self.saved_template_name = views.FrontPageView.template_name
+        self.mock_template_name = "aira/frontpage/tmpmain.html"
+        views.FrontPageView.template_name = self.mock_template_name
+        with open("aira/templates/" + self.mock_template_name, "w") as f:
+            f.write(
+                r"""\
+                {% extends "aira/frontpage/main-default.html" %}
+                {% block extrajs %}
+                  {{block.super}}
+                  <script src="https://unpkg.com/xhr-mock/dist/xhr-mock.js"></script>
+                  <script>
+                    XHRMock.setup()
+                    XHRMock.get(/\.*/, {
+                        body: 'Hello, world!'
+                    });
+                  </script>
+                {% endblock %}
+                """
+            )
+
+    def tearDown(self):
+        os.remove("aira/templates/" + self.mock_template_name)
+        views.FrontPageView.template_name = self.saved_template_name
+
+    def test_popup(self):
+        # Visit front page and ensure there's no popup
+        self.selenium.get(self.live_server_url)
+        self.map_element.wait_until_exists()
+        self.assertFalse(self.popup_element.exists())
+
+        # Click in the map
+        ActionChains(self.selenium).move_to_element(
+            self.selenium.find_element(By.ID, "map")
+        ).move_by_offset(20, 20).click().perform()
+        sleep(0.1)
+
+        # The popup should now appear
+        self.assertTrue(self.popup_element.exists())
+
+
+class SeleniumDataTestCase(SetupTestDataMixin, SeleniumTestCase):
+    def setUp(self):
+        super().setUp()
+        self._setup_database()
+
+
+@skipUnless(getattr(settings, "SELENIUM_WEBDRIVERS", False), "Selenium is unconfigured")
+class AgrifieldsMapTestCase(SeleniumDataTestCase):
+    map_element = PageElement(By.ID, "map")
+    map_marker = PageElement(By.CSS_SELECTOR, "img.leaflet-marker-icon")
+
+    def test_agrifields_map(self):
+        # Visit user's agrifields list page
+        r = self.selenium.login(username="bob", password="topsecret")
+        self.assertTrue(r)
+        self.selenium.get(self.live_server_url + "/home/")
+        self.map_element.wait_until_exists()
+
+        # Check that there is a marker on the map (it marks the agrifield)
+        self.assertTrue(self.map_marker.exists())
+
+
+@skipUnless(getattr(settings, "SELENIUM_WEBDRIVERS", False), "Selenium is unconfigured")
+class AgrifieldEditMapTestCase(SeleniumDataTestCase):
+    map_element = PageElement(By.ID, "map")
+    map_marker = PageElement(By.CSS_SELECTOR, "img.leaflet-marker-icon")
+    longitude_element = PageElement(By.ID, "id_location_0")
+    latitude_element = PageElement(By.ID, "id_location_1")
+
+    def test_agrifields_map(self):
+        # Visit user's edit agrifield list page
+        r = self.selenium.login(username="bob", password="topsecret")
+        self.assertTrue(r)
+        self.selenium.get(self.live_server_url + "/update_agrifield/1/")
+        self.map_element.wait_until_exists()
+
+        # Check that there is a marker on the map (it marks the agrifield)
+        self.assertTrue(self.map_marker.exists())
+
+        # Save the latitude and longitude values
+        original_latitude = self.latitude_element.get_attribute("value")
+        original_longitude = self.longitude_element.get_attribute("value")
+
+        # Click near the left edge of the map
+        x_offset = self.map_element.size["width"] / 2
+        y_offset = 20
+        ActionChains(self.selenium).move_to_element(
+            self.selenium.find_element(By.ID, "map")
+        ).move_by_offset(x_offset, y_offset).click().perform()
+        sleep(0.1)
+
+        # The co-ordinates should have changed
+        new_latitude = self.latitude_element.get_attribute("value")
+        new_longitude = self.longitude_element.get_attribute("value")
+        self.assertNotEqual(new_latitude, original_latitude)
+        self.assertNotEqual(new_longitude, original_longitude)
+
+    def test_agrifields_map_in_new_agrifields(self):
+        # Visit user's add agrifield list page
+        r = self.selenium.login(username="bob", password="topsecret")
+        self.assertTrue(r)
+        self.selenium.get(self.live_server_url + "/create_agrifield/bob/")
+        self.map_element.wait_until_exists()
+
+        # Check that latitude and longitude values are empty
+        self.assertEqual(self.latitude_element.get_attribute("value"), "")
+        self.assertEqual(self.longitude_element.get_attribute("value"), "")
+
+        # Click near the left edge of the map
+        x_offset = self.map_element.size["width"] / 2
+        y_offset = 20
+        ActionChains(self.selenium).move_to_element(
+            self.selenium.find_element(By.ID, "map")
+        ).move_by_offset(x_offset, y_offset).click().perform()
+        sleep(0.1)
+
+        # The co-ordinates should have been set
+        self.assertNotEqual(self.latitude_element.get_attribute("value"), "")
+        self.assertNotEqual(self.longitude_element.get_attribute("value"), "")
+
+
+@skipUnless(getattr(settings, "SELENIUM_WEBDRIVERS", False), "Selenium is unconfigured")
+class AddIrrigationTestCase(SeleniumDataTestCase):
+    water_volume_radio = PageElement(By.ID, "id_irrigation_type_0")
+    irrigation_duration_radio = PageElement(By.ID, "id_irrigation_type_1")
+    flowmeter_radio = PageElement(By.ID, "id_irrigation_type_2")
+    timestamp_input = PageElement(By.ID, "id_timestamp")
+    supplied_water_volume_input = PageElement(By.ID, "id_supplied_water_volume")
+    supplied_duration_input = PageElement(By.ID, "id_supplied_duration")
+    supplied_flow_rate_input = PageElement(By.ID, "id_supplied_flow_rate")
+    flowmeter_reading_start_input = PageElement(By.ID, "id_flowmeter_reading_start")
+    flowmeter_reading_end_input = PageElement(By.ID, "id_flowmeter_reading_end")
+    flowmeter_water_percentage_input = PageElement(
+        By.ID, "id_flowmeter_water_percentage"
+    )
+
+    def assert_visibility(self, wv, d, f, frs, fre, fwp):
+        self._check_against(self.supplied_water_volume_input, wv)
+        self._check_against(self.supplied_duration_input, d)
+        self._check_against(self.supplied_flow_rate_input, f)
+        self._check_against(self.flowmeter_reading_start_input, frs)
+        self._check_against(self.flowmeter_reading_end_input, fre)
+        self._check_against(self.flowmeter_water_percentage_input, fwp)
+
+    def _check_against(self, element, expected_visibility):
+        if expected_visibility:
+            self.assertTrue(element.is_displayed())
+        else:
+            self.assertFalse(element.is_displayed())
+
+    def test_add_irrigation(self):
+        # Visit user's add irrigation page
+        r = self.selenium.login(username="bob", password="topsecret")
+        self.assertTrue(r)
+        self.selenium.get(self.live_server_url + "/create_irrigationlog/1/")
+        self.timestamp_input.wait_until_exists()
+
+        # By default "water volume" should be selected
+        self.assert_visibility(True, False, False, False, False, False)
+
+        # Select "irrigation duration" and check
+        self.irrigation_duration_radio.click()
+        self.supplied_water_volume_input.wait_until_not_displayed()
+        self.assert_visibility(False, True, True, False, False, False)
+
+        # Select "flowmeter" and check
+        self.flowmeter_radio.click()
+        self.supplied_duration_input.wait_until_not_displayed()
+        self.assert_visibility(False, False, False, True, True, True)
+
+
+@skipUnless(getattr(settings, "SELENIUM_WEBDRIVERS", False), "Selenium is unconfigured")
+class AgrifieldsMapPopupTestCase(SeleniumDataTestCase):
+    map_marker = PageElement(By.CSS_SELECTOR, "img.leaflet-marker-icon")
+    popup_element = PageElement(By.CSS_SELECTOR, "div.leaflet-popup")
+
+    def test_popup(self):
+        # Visit agrifields list page
+        r = self.selenium.login(username="bob", password="topsecret")
+        self.assertTrue(r)
+        self.selenium.get(self.live_server_url + "/home/bob/")
+        self.map_marker.wait_until_exists()
+
+        # Check that popup appears when marker is clicked
+        self.assertFalse(self.popup_element.exists())
+        self.map_marker.click()
+        self.popup_element.wait_until_exists()
+        self.assertTrue(self.popup_element.is_displayed())
+
+
+class ManagementMenuTestCase(TestCase):
+    """Check whether "Management" is translated correctly.
+
+    We have a "Management" menu, but its translation may conflict with a translation
+    from django-registration-redux, so we check that we've used context or whatever
+    alright.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            id=55, username="bob", password="topsecret"
+        )
+        self.user.save()
+        r = self.client.login(username="bob", password="topsecret")
+        assert r is True
+
+    def test_management_translation(self):
+        self.client.cookies.load({settings.LANGUAGE_COOKIE_NAME: "el"})
+        response = self.client.get("/")
+        soup = BeautifulSoup(response.content, "html.parser")
+        management_link_element = soup.find("span", id="management-link")
+        self.assertEqual(management_link_element.get_text(), "Διαχείριση")

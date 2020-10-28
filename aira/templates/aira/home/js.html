@@ -2,20 +2,19 @@
 {% load i18n %}
 
 <script>
-    map = aira.mapModule.getMap("open_map");
-    aira.mapModule.addCoveredAreaLayer(map, "{% static 'kml/covered_area.kml' %}");
-    aira.agrifields = [
-        {% for f in agrifields %}
-            {
-                name: "{{ f.name }}",
-                url: "{% url 'update_agrifield' f.id %}", 
-                coords: [{{ f.location.coords|cut:"("|cut:")" }}],
-            },
-        {% endfor %}
-    ];
-    aira.mapModule.addAgrifieldsToMap(
-        map,
-        aira.agrifields,
-        "{% blocktrans %}Fields of {{ user.username }}{% endblocktrans %}",
-    );
+  aira.agrifieldsMap.create();
+  aira.agrifieldsMap.addCoveredAreaLayer("{% static 'kml/covered_area.kml' %}");
+  aira.agrifields = [
+    {% for f in agrifields %}
+      {
+        name: "{{ f.name }}",
+        url: "{% url 'update_agrifield' f.id %}",
+        coords: [{{ f.location.coords|cut:"("|cut:")" }}],
+      },
+    {% endfor %}
+  ];
+  aira.agrifieldsMap.addAgrifields(
+    aira.agrifields,
+    "{% blocktrans %}Fields of {{ user.username }}{% endblocktrans %}",
+  );
 </script>

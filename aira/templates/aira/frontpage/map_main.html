@@ -1,19 +1,19 @@
 <div class="row">
-    <div class="col-xs-12">
-      <div id="wms_map" class="map"></div>
-      <p id="mapLegend" class="text-center">  <p>
-    </div>
+  <div id="map" class="map"></div>
+</div>
+<div class="row">
+  <p class="text-center">Click on the map to show values</p>
 </div>
 <div class="row">
   <div class="col-xs-4 text-left">
-    <button id="previous" type="button" class="btn btn-xs btn-default" onclick="aira.mapModule.createPreviousRasterMap()">
+    <button id="previous-date" type="button" class="btn btn-xs btn-default" onclick="aira.meteoMapPanel.setMapDate(this.getAttribute('date'))">
     </button>
   </div>
   <div class="col-xs-4 text-center">
-    <button id="current" class="btn btn-xs btn-default"></button>
+    <button id="current-date" class="btn btn-xs btn-default"></button>
   </div>
   <div class="col-xs-4 text-right">
-    <button id="next" type="button" class="btn btn-xs btn-default" onclick="aira.mapModule.createNextRasterMap()">
+    <button id="next-date" type="button" class="btn btn-xs btn-default" onclick="aira.meteoMapPanel.setMapDate(this.getAttribute('date'))">
     </button>
   </div>
 </div>

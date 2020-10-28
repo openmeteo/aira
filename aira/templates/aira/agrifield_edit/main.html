@@ -27,27 +27,25 @@
 
 
 {% block extrajs %}
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.20.0/apexcharts.min.js"></script>
   <script type="text/javascript">
-    map = aira.mapModule.getMap('on_click_map');
-    map.setBaseLayer(map.getLayersByName('Google Satellite')[0]);
-    aira.mapModule.addCoveredAreaLayer(map, "{% static 'kml/covered_area.kml' %}");
+    aira.defaultBaseLayer = "Google Satellite";
+    aira.agrifieldEditMap.create();
+    aira.agrifieldEditMap.addCoveredAreaLayer("{% static 'kml/covered_area.kml' %}");
     {% if object %}
-        aira.agrifields = [
-            {
-                name: "{{ object.name }}",
-                url: "#",
-                coords: [{{ object.location.coords|cut:"("|cut:")" }}],
-            }
-        ];
-        var agrifields_layer = aira.mapModule.addAgrifieldsToMap(
-            map, aira.agrifields, "{{ object.name }}"
-        );
+      aira.agrifields = [
+        {
+          name: "{{ object.name }}",
+          url: "#",
+          coords: [{{ object.location.coords|cut:"("|cut:")" }}],
+        }
+      ];
+      aira.agrifieldEditMap.addAgrifields(aira.agrifields, "{{ object.name }}");
     {% else %}
-        var agrifields_layer = aira.mapModule.addAgrifieldsToMap(
-            map, [], "Add new field"
-        );
+      aira.agrifieldEditMap.addAgrifields([], "Add new field");
     {% endif %}
-    aira.mapModule.registerClickEvent(map, agrifields_layer);
-    aira.agrifield_edit_document_ready();
+    aira.agrifieldEditMap.registerClickEvent();
+    aira.agrifieldEditDocumentReady();
+    aira.kcCharter.initialize();
   </script>
 {% endblock %}

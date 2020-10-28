@@ -3,43 +3,43 @@
 <div class="row">
   <div class="col-md-3">
     <p>
-      <b>{% trans "View historical available data" %}</b><br>
+      <b>{% trans "Climate data" %}</b><br>
       <sub>{% trans "Time period" %}: <span class="text-success">{{ start_date|date:"Y-m-d" }}</span> : <span class="text-success">{{ end_date|date:"Y-m-d" }}</span></sub>
     <p>
   </div>
   <div class="col-md-3">
-    <div onchange="aira.mapModule.selectRasterMap()" style="float: left;" class="form-group">
-      <div class="input-group date" id="calendar">
-        <input type='text' class="form-control" id="datepickerInputSelector" />
-        <input type="hidden" class="form-control" id="datetimepickerMirrorField" readonly />
-        <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+    <div style="float: left;" class="form-group">
+      <div class="input-group date" id="date-selector">
+        <input type='text' class="form-control" id="date-input" onchange="aira.meteoMapPanel.setMapDate(this.value)" />
+        <span class="input-group-addon">
+          <span class="glyphicon glyphicon-calendar"></span>
+        </span>
       </div>
     </div>
   </div>
   <div class="col-md-3">
-    <div id="meteo-daily" class="form-group">
-      <select  id="dailyMeteoVar" class="form-control" onchange="aira.mapModule.selectRasterMap()">
+    <div id="raster-selector-daily" class="form-group">
+      <select id="dailyMeteoVar" class="form-control" onchange="aira.meteoMapPanel.updateMeteoLayer()">
         <option value="Daily_rain_">{% trans "Daily rainfall" %} (mm/d)</option>
-        <option value="Daily_evaporation_">{% trans "Daily potential evapotranspiration" %} (mm/d)</option>
+        <option value="Daily_evaporation_">{% trans "Daily reference evapotranspiration" %} (mm/d)</option>
         <option value="Daily_humidity_">{% trans "Daily humidity" %} (%)</option>
         <option value="Daily_temperature_">{% trans "Daily temperature" %} (°C)</option>
         <option value="Daily_wind_speed_">{% trans "Daily wind speed" %} (m/s)</option>
         <option value="Daily_solar_radiation_">{% trans "Daily solar radiation" %} (W/m²)</option>
       </select>
     </div>
-    <div id="meteo-monthly" >
+    <div id="raster-selector-monthly" >
       <div class="form-group">
-        <select  id="monthlyMeteoVar" class="form-control" onchange="aira.mapModule.selectRasterMap()">
-          <option value="Monthly_evaporation_">{% trans "Monthly potential evapotranspiration" %} (mm/month)</option>
+        <select id="monthlyMeteoVar" class="form-control" onchange="aira.meteoMapPanel.updateMeteoLayer()">
+          <option value="Monthly_evaporation_">{% trans "Monthly reference evapotranspiration" %} (mm/month)</option>
         </select>
       </div>
     </div>
   </div>
   <div class="col-sm-3">
-    <a href="#" id="timestampSelectorBtn"
-                toggle-timestamp = "daily"
-                raster-timestamp = "daily"
-                onclick="aira.mapModule.selectTimestampView()"
+    <a href="#" id="timestep-toggle"
+                current-timestep="daily"
+                onclick="aira.meteoMapPanel.toggleBetweenMonthlyAndDaily()"
                 class="btn btn-primary btn">
     </a>
   </div>

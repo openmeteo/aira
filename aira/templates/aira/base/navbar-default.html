@@ -23,7 +23,7 @@
             <li><a href="{% url 'home' user.username %}"  rel="nofollow"><i class="glyphicon glyphicon-home"></i> {% blocktrans with username=user.username %}{{ username }} home{% endblocktrans %}</a></li>
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                <span class="glyphicon glyphicon-cog"></span> {% trans "Management" %} <span class="caret"></span>
+                <span class="glyphicon glyphicon-cog"></span> <span id="management-link">{% trans "Management" context "management link" %}</span><span class="caret"></span>
               </a>
               <ul class="dropdown-menu" role="menu">
                 <li><a href="{% url 'home' user.username %}"  rel="nofollow"><i class="glyphicon glyphicon-leaf"></i> {% trans "My fields" %}</a>
@@ -34,7 +34,7 @@
                   <li><a href="{% url 'create_profile' %}"><i class="glyphicon glyphicon-user"></i> {% trans "Account" %}</a></li>
                 {% endif %}
                 <li><a href="{% url 'tools' %}"><i class="glyphicon glyphicon-wrench"></i> {% trans "Tools" %}</a></li>
-                <li class="divider"></li>
+                <li class="divider insert-support-link-after-this"></li>
                 <li><a href="{% url 'auth_logout' %}"> <i class="glyphicon glyphicon-log-out"></i> {% trans "Logout" %} </a></li>
               </ul>
             </li>
@@ -45,13 +45,24 @@
           <ul class="nav navbar-nav navbar-right">
             <li><a href="{% url 'auth_login' %}" rel="nofollow"><i class="glyphicon glyphicon-off"></i> {% trans "Login" %}</a></li>
             <li><a href="{% url 'registration_register' %}" rel="nofollow"><i class="glyphicon glyphicon-user"></i> {% trans "Register" %}</a></li>
-            <li><a href="{% url 'auth_password_reset' %}" rel="nofollow"><i class="glyphicon glyphicon-lock"></i> {% trans "Lost password?" %}</a></li>
-            {% block support_link %}
-            {% endblock %}
+            <li class="insert-support-link-after-this"><a href="{% url 'auth_password_reset' %}" rel="nofollow"><i class="glyphicon glyphicon-lock"></i> {% trans "Lost password?" %}</a></li>
             <li><a href="{% url 'try' %}" rel="nofollow"><i class="glyphicon glyphicon-hand-right"></i> {% trans "Try" %}</a></li>
           </ul>
         </div>
       {% endif %}
     </div>
   </div>
+  {% comment %}
+    We have a different menu if the user is authenticated and if not. We want
+    to insert {% block support_link %} in both menus. However, Django only allows
+    a given block to be used only once in each template file . Hence the
+    following hack.
+  {% endcomment %}
+  <script>
+    const element = document.querySelector('.insert-support-link-after-this');
+    const text = `{% block support_link %}{% endblock %}`;
+    if (text) {
+      element.insertAdjacentHTML('afterend', text);
+    };
+  </script>
 {% endblock %}

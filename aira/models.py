@@ -1,8 +1,10 @@
+import csv
 import datetime as dt
 import math
 import os
 from collections import OrderedDict
 from glob import iglob
+from io import StringIO
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -16,6 +18,7 @@ from django.http import Http404
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
+import swb
 from hspatial import PointTimeseries, extract_point_from_raster
 from osgeo import gdal
 
@@ -94,13 +97,8 @@ class CropType(models.Model):
     root_depth_max = models.FloatField()
     root_depth_min = models.FloatField()
     max_allowed_depletion = models.FloatField()
-    kc_init = models.FloatField()
-    kc_mid = models.FloatField()
-    kc_end = models.FloatField()
-    days_kc_init = models.PositiveSmallIntegerField()
-    days_kc_dev = models.PositiveSmallIntegerField()
-    days_kc_mid = models.PositiveSmallIntegerField()
-    days_kc_late = models.PositiveSmallIntegerField()
+    kc_plantingdate = models.FloatField()
+    kc_offseason = models.FloatField(verbose_name="Kc off-season")
     planting_date = models.DateField()
     fek_category = models.IntegerField()
 
@@ -118,6 +116,34 @@ class CropType(models.Model):
         if result <= today:
             return result
         return result.replace(year=today.year - 1)
+
+    @property
+    def kc_stages(self):
+        result = []
+        for kc_stage in self.croptypekcstage_set.order_by("order"):
+            result.append(swb.KcStage(kc_stage.ndays, kc_stage.kc_end))
+        return result
+
+    @property
+    def kc_stages_str(self):
+        kc_stages = self.croptypekcstage_set.order_by("order")
+        lines = [f"{s.ndays}\t{s.kc_end}" for s in kc_stages]
+        return "\n".join(lines)
+
+
+class KcStage(models.Model):
+    order = models.PositiveSmallIntegerField()
+    ndays = models.PositiveSmallIntegerField()
+    kc_end = models.FloatField(
+        validators=[MaxValueValidator(1.50), MinValueValidator(0.10)]
+    )
+
+    class Meta:
+        abstract = True
+
+
+class CropTypeKcStage(KcStage):
+    crop_type = models.ForeignKey(CropType, on_delete=models.CASCADE)
 
 
 class IrrigationType(models.Model):
@@ -149,11 +175,17 @@ class Agrifield(models.Model, AgrifieldSWBMixin, AgrifieldSWBResultsMixin):
     irrigation_type = models.ForeignKey(IrrigationType, on_delete=models.CASCADE)
     area = models.FloatField()
     use_custom_parameters = models.BooleanField(default=False)
-    custom_kc = models.FloatField(
+    custom_kc_offseason = models.FloatField(
         null=True,
         blank=True,
         validators=[MaxValueValidator(1.50), MinValueValidator(0.10)],
     )
+    custom_kc_plantingdate = models.FloatField(
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(1.50), MinValueValidator(0.10)],
+    )
+    custom_planting_date = models.DateField(null=True, blank=True)
     custom_root_depth_max = models.FloatField(
         null=True,
         blank=True,
@@ -412,6 +444,31 @@ class Agrifield(models.Model, AgrifieldSWBMixin, AgrifieldSWBResultsMixin):
             }
         except AppliedIrrigation.DoesNotExist:
             return {}
+
+    def set_custom_kc_stages(self, s):
+        """Replaces all existing kc stages with ones read from a string.
+
+        The string can be comma-delimited or tab-delimited, or a mix.
+        """
+
+        s = s.replace("\t", ",")
+        self.agrifieldcustomkcstage_set.all().delete()
+        for i, row in enumerate(csv.reader(StringIO(s)), start=1):
+            ndays = int(row[0])
+            kc_end = float(row[1])
+            AgrifieldCustomKcStage.objects.create(
+                agrifield=self, order=i, ndays=ndays, kc_end=kc_end
+            )
+
+    @property
+    def kc_stages_str(self):
+        kc_stages = self.agrifieldcustomkcstage_set.order_by("order")
+        lines = [f"{s.ndays}\t{s.kc_end}" for s in kc_stages]
+        return "\n".join(lines)
+
+
+class AgrifieldCustomKcStage(KcStage):
+    agrifield = models.ForeignKey(Agrifield, on_delete=models.CASCADE)
 
 
 class AppliedIrrigation(models.Model):

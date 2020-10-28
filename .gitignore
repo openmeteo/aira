@@ -54,6 +54,9 @@ docs/_build/
 # PyBuilder
 target/
 
+# JS/ESlint stuff
+node_modules/
+
 # Local stuff
 aira_project/settings/local.py
 aira_project/aira.db

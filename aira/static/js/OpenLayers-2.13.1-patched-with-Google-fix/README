@@ -1,7 +1,0 @@
-OpenLayers 2 does not work with Google Maps any more, because OpenLayers
-2 is essentially unmaintained and meanwhile Google has made a breaking
-API change.  This is a patched version of OpenLayers 2 that does work.
-For more information, see https://stackoverflow.com/a/32702071/662345.
-The OpenLayers.js file has been downloaded from the link found in that
-StackOverflow answer (other files in this directory are from the
-OpenLayers 2.13.1 release).

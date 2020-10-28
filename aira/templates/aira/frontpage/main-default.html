@@ -25,17 +25,17 @@
 
 {% block extrajs %}
   <script type="text/javascript">
-      aira.yesterday = '{{ end_date|date:"Y-m-d" }}';
-      aira.transToggleTimestampMap = {
-        toggleDaily: '{% trans "Switch to daily" %}',
-        toggleMonthly: '{% trans "Switch to monthly" %}',
-        mapLegendDaily: '{% trans "Click on the map to get values" %}',
-        mapLegendMonthly: '{% trans "Click on the map to get values" %}',
-      }
+    aira.start_date = '{{ start_date|date:"Y-m-d" }}';
+    aira.end_date = '{{ end_date|date:"Y-m-d" }}';
+    aira.timestepMessages = {
+      switchToDaily: '{% trans "Switch to daily" %}',
+      switchToMonthly: '{% trans "Switch to monthly" %}',
+    }
   </script>
   <script type="text/javascript">
     $(document).ready(function(){
-      aira.mapModule.initTimestampView();
+      aira.meteoMapPanel.initialize();
+      aira.map.addCoveredAreaLayer("{% static 'kml/covered_area.kml' %}");
     });
   </script>
 {% endblock %}
