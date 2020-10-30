@@ -17,7 +17,7 @@
             {% if user.username != "demo" %}
               <div class="col-sm-offset-2 col-sm-10">
                 <button type="submit" class="btn btn-success btn-xs">{% trans "Update" %}</button>
-                <a class="btn btn-success btn-xs" href="{% url 'home' username=agrifield.owner.username %}"> {% trans "Back" %} </a>
+                <a class="btn btn-success btn-xs" href="{% url 'agrifield-list' username=agrifield.owner.username %}"> {% trans "Back" %} </a>
               </div>
             {% endif %}
           {% endbuttons %}

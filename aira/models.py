@@ -70,14 +70,18 @@ class Profile(models.Model):
         choices=EMAIL_LANGUAGE_CHOICES,
     )
     supervisor = models.ForeignKey(
-        User, related_name="supervisor", null=True, blank=True, on_delete=models.CASCADE
+        User,
+        related_name="supervisees",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
     )
     supervision_question = models.BooleanField(choices=YES_OR_NO, default=False)
 
     class Meta:
         verbose_name_plural = "Profiles"
 
-    def get_supervised(self):
+    def get_supervisee(self):
         return Profile.objects.filter(supervisor=self.user)
 
     def __str__(self):
@@ -161,7 +165,10 @@ class IrrigationType(models.Model):
 class SoilAnalysisStorage(FileSystemStorage):
     def url(self, name):
         agrifield = Agrifield.objects.get(soil_analysis=name)
-        return reverse("agrifield-soil-analysis", kwargs={"agrifield_id": agrifield.id})
+        return reverse(
+            "agrifield-soil-analysis",
+            kwargs={"username": agrifield.owner.username, "agrifield_id": agrifield.id},
+        )
 
 
 class Agrifield(models.Model, AgrifieldSWBMixin, AgrifieldSWBResultsMixin):

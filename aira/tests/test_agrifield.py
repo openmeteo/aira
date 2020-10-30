@@ -296,6 +296,9 @@ class NeedsIrrigationTestCase(TestCase):
     def setUp(self):
         self.agrifield = mommy.make(models.Agrifield, id=1)
 
+    def tearDown(self):
+        cache.delete("model_run_1")
+
     def _set_needed_irrigation_amount(self, amount):
         atimeseries = pd.Series(data=[amount], index=pd.DatetimeIndex(["2020-01-15"]))
         mock_model_run = {

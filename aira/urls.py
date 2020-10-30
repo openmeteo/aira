@@ -1,85 +1,139 @@
 from django.urls import path
 from django.views.generic import RedirectView
 
-from aira import views
+from aira import obsolete_redirected_views, views
 
 urlpatterns = [
-    path("", views.FrontPageView.as_view(), name="welcome"),
-    path("home/<str:username>/", views.AgrifieldListView.as_view(), name="home"),
-    path("home/", views.AgrifieldListView.as_view(), name="home"),
-    # Recommendation
+    path("", views.FrontPageView.as_view(), name="frontpage"),
     path(
-        "advice/<int:pk>/",
-        RedirectView.as_view(permanent=True, pattern_name="recommendation"),
+        "<str:username>/fields/",
+        views.AgrifieldListView.as_view(),
+        name="agrifield-list",
+    ),
+    path("myfields/", views.MyFieldsView.as_view(), name="my_fields"),
+    path(
+        "<str:username>/fields/<int:pk>/report/",
+        views.AgrifieldReportView.as_view(),
+        name="agrifield-report",
     ),
     path(
-        "recommendation/<int:pk>/",
-        views.RecommendationView.as_view(),
-        name="recommendation",
-    ),
-    # Profile
-    path(
-        "update_profile/<int:pk>/",
-        views.UpdateProfileView.as_view(),
-        name="update_profile",
-    ),
-    path("delete_user/<int:pk>/", views.DeleteUserView.as_view(), name="delete_user"),
-    # Agrifield
-    path(
-        "create_agrifield/<str:username>/",
+        "<str:username>/fields/create/",
         views.CreateAgrifieldView.as_view(),
-        name="create_agrifield",
+        name="agrifield-create",
     ),
     path(
-        "update_agrifield/<int:pk>/",
+        "<str:username>/fields/<int:pk>/edit/",
         views.UpdateAgrifieldView.as_view(),
-        name="update_agrifield",
+        name="agrifield-update",
     ),
     path(
-        "delete_agrifield/<int:pk>/",
+        "<str:username>/fields/<int:pk>/delete/",
         views.DeleteAgrifieldView.as_view(),
-        name="delete_agrifield",
+        name="agrifield-delete",
     ),
     path(
-        "agrifield/<int:agrifield_id>/timeseries/<str:variable>/",
+        "<str:username>/fields/<int:agrifield_id>/timeseries/<str:variable>/",
         views.AgrifieldTimeseriesView.as_view(),
         name="agrifield-timeseries",
     ),
     path(
-        "agrifield/<int:agrifield_id>/soil_analysis/",
+        "<str:username>/fields/<int:agrifield_id>/soil_analysis/",
         views.DownloadSoilAnalysisView.as_view(),
         name="agrifield-soil-analysis",
     ),
     path(
-        "create_irrigationlog/<int:pk>/",
-        views.CreateAppliedIrrigationView.as_view(),
-        name="create_irrlog",
+        "<str:username>/fields/<int:agrifield_id>/appliedirrigations/",
+        views.AppliedIrrigationsView.as_view(),
+        name="applied-irrigations",
     ),
     path(
-        "update_irrigationlog/<int:pk>/",
+        "<str:username>/fields/<int:agrifield_id>/appliedirrigations/<int:pk>/edit/",
         views.UpdateAppliedIrrigationView.as_view(),
-        name="update_irrlog",
+        name="applied-irrigation-update",
     ),
     path(
-        "delete_irrigationlog/<int:pk>/",
+        "<str:username>/fields/<int:agrifield_id>/appliedirrigations/<int:pk>/delete/",
         views.DeleteAppliedIrrigationView.as_view(),
-        name="delete_irrlog",
+        name="applied-irrigation-delete",
+    ),
+    path(
+        "<str:username>/fields/<int:pk>/performance/",
+        views.IrrigationPerformanceView.as_view(),
+        name="agrifield-irrigation-performance",
+    ),
+    path(
+        "<str:username>/fields/<int:pk>/performance/download/",
+        views.IrrigationPerformanceCsvView.as_view(),
+        name="agrifield-irrigation-performance-download",
+    ),
+    path(
+        "<str:username>/supervisees/remove/",
+        views.remove_supervisee_from_user_list,
+        name="supervisee-remove",
+    ),
+    path(
+        "<str:username>/supervisees/",
+        views.SuperviseesView.as_view(),
+        name="supervisees",
     ),
     path("conversion_tools/", views.ConversionToolsView.as_view(), name="tools"),
     path("try/", views.DemoView.as_view(), name="try"),
+]
+
+redirections_of_old_urls = [
+    path(
+        "home/<str:username>/",
+        RedirectView.as_view(permanent=True, pattern_name="agrifield-list"),
+    ),
+    path("home/", RedirectView.as_view(permanent=True, pattern_name="my_fields")),
+    path(
+        "advice/<int:pk>/",
+        obsolete_redirected_views.RecommendationRedirectView.as_view(),
+    ),
+    path(
+        "recommendation/<int:pk>/",
+        obsolete_redirected_views.RecommendationRedirectView.as_view(),
+    ),
+    path(
+        "create_agrifield/<str:username>/",
+        RedirectView.as_view(permanent=True, pattern_name="agrifield-create"),
+    ),
+    path(
+        "update_agrifield/<int:pk>/",
+        obsolete_redirected_views.UpdateAgrifieldRedirectView.as_view(),
+    ),
+    path(
+        "delete_agrifield/<int:pk>/",
+        obsolete_redirected_views.DeleteAgrifieldRedirectView.as_view(),
+    ),
+    path(
+        "agrifield/<int:agrifield_id>/timeseries/<str:variable>/",
+        obsolete_redirected_views.AgrifieldTimeseriesRedirectView.as_view(),
+    ),
+    path(
+        "agrifield/<int:agrifield_id>/soil_analysis/",
+        obsolete_redirected_views.DownloadSoilAnalysisRedirectView.as_view(),
+    ),
+    path(
+        "create_irrigationlog/<int:pk>/",
+        obsolete_redirected_views.AppliedIrrigationsRedirectView.as_view(),
+    ),
+    path(
+        "update_irrigationlog/<int:pk>/",
+        obsolete_redirected_views.AppliedIrrigationEditRedirectView.as_view(),
+    ),
+    path(
+        "delete_irrigationlog/<int:pk>/",
+        obsolete_redirected_views.AppliedIrrigationDeleteRedirectView.as_view(),
+    ),
     path(
         "irrigation-performance-chart/<int:pk>/",
-        views.IrrigationPerformanceView.as_view(),
-        name="irrigation-chart",
+        obsolete_redirected_views.IrrigationPerformanceRedirectView.as_view(),
     ),
     path(
         "download-irrigation-performance/<int:pk>/",
-        views.performance_csv,
-        name="performance_csv",
-    ),
-    path(
-        "supervised_user/remove/",
-        views.remove_supervised_user_from_user_list,
-        name="supervised_user_remove",
+        obsolete_redirected_views.IrrigationPerformanceDownloadRedirectView.as_view(),
     ),
 ]
+
+urlpatterns.extend(redirections_of_old_urls)

@@ -17,7 +17,7 @@
             {% if user.username != "demo" %}
               <div class="col-sm-offset-2 col-sm-10">
                 <button type="submit" class="btn btn-success btn-xs">{% trans "Update" %}</button>
-                <a class="btn btn-success btn-xs" href="{% url 'create_irrlog' object.agrifield.id %}"> {% trans "Back" %} </a>
+                <a class="btn btn-success btn-xs" href="{% url 'applied-irrigations' request.user.username object.agrifield.id %}"> {% trans "Back" %} </a>
               </div>
             {% endif %}
           {% endbuttons %}

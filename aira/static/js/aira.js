@@ -21,11 +21,15 @@ aira.agrifieldEditDocumentReady = () => {
 };
 
 aira.setupDateTimePickerForAppliedIrrigation = () => {
+  const adate = new Date();
+  adate.setMinutes(0, 0, 0);
   $('#id_timestamp').datetimepicker({
     format: 'yyyy-mm-dd hh:ii',
     autoclose: true,
     todayBtn: true,
     pickerPosition: 'bottom-left',
+    minView: 1,
+    initialDate: adate,
   });
 };
 

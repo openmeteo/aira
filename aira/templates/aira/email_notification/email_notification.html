@@ -22,7 +22,7 @@
   </section>
 
   <section>
-    <p>{% trans "Field owner" %}: <a href="http://{{ site.domain }}/home/{{ owner }}/">{{ owner }}</a> <br></p>
+    <p>{% trans "Field owner" %}: <a href="http://{{ site.domain }}/{{ owner }}/fields/">{{ owner }}</a> <br></p>
     <hr>
     <h2>{% trans "Irrigation requirements" %}</h2>
     {% for f in agrifields  %}
@@ -40,7 +40,7 @@
                     The field <strong>{{ name }}</strong> needs irrigation.
                   {% endblocktrans %}
                 </p>
-                {% include "aira/home/agrifields_list/agrifield_results_recommendation.html" %}
+                {% include "aira/agrifield_list/agrifield/results_recommendation.html" %}
               </li>
             {% else %}
               <li class="full">

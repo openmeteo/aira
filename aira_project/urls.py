@@ -5,6 +5,7 @@ from django.urls import include, path
 
 from registration.backends.default.views import RegistrationView
 
+from aira import account_views, obsolete_redirected_views
 from aira.forms import MyRegistrationForm
 
 urlpatterns = [
@@ -12,6 +13,16 @@ urlpatterns = [
         "accounts/register/",
         RegistrationView.as_view(form_class=MyRegistrationForm),
         name="registration_register",
+    ),
+    path(
+        "accounts/edit_profile/<str:username>/",
+        account_views.EditProfileView.as_view(),
+        name="edit_profile",
+    ),
+    path(
+        "accounts/delete_user/<str:username>/",
+        account_views.DeleteUserView.as_view(),
+        name="delete_user",
     ),
     path("i18n/", include("django.conf.urls.i18n")),
     path("admin/", admin.site.urls),
@@ -23,6 +34,18 @@ urlpatterns = [
     path("disclaimer/", flatpage, {"url": "/disclaimer/"}, name="disclaimer"),
 ]
 
+redirections_of_old_urls = [
+    path(
+        "update_profile/<int:pk>/",
+        obsolete_redirected_views.EditProfileRedirectView.as_view(),
+    ),
+    path(
+        "delete_user/<int:pk>/",
+        obsolete_redirected_views.DeleteUserRedirectView.as_view(),
+    ),
+]
+
+urlpatterns.extend(redirections_of_old_urls)
 
 # If you want to use the Django debug toolbar, then:
 # 1) pip install django-debug-toolbar

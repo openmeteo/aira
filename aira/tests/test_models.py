@@ -144,7 +144,7 @@ class AgrifieldDeletesCachedPointTimeseriesOnSave(AgrifieldTestCaseBase):
 class AgrifieldSoilAnalysisTestCase(TestCase, RandomMediaRootMixin):
     def setUp(self):
         self.override_media_root()
-        self.agrifield = mommy.make(models.Agrifield)
+        self.agrifield = mommy.make(models.Agrifield, owner__username="bob")
         self.agrifield.soil_analysis.save("somefile", ContentFile("hello world"))
 
     def tearDown(self):
@@ -157,7 +157,7 @@ class AgrifieldSoilAnalysisTestCase(TestCase, RandomMediaRootMixin):
     def test_file_url(self):
         self.assertEqual(
             self.agrifield.soil_analysis.url,
-            "/agrifield/{}/soil_analysis/".format(self.agrifield.id),
+            "/bob/fields/{}/soil_analysis/".format(self.agrifield.id),
         )
 
 

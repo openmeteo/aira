@@ -1,9 +1,8 @@
 {% load i18n %}
 
-<form class="form-inline" action="{% url 'set_language' %}" method="post">
+<form class="form-inline" action="{% url 'set_language' %}" style="display: inline" method="post" onchange="this.submit()">
   {% csrf_token %}
-  <input name="next" type="hidden" value="{{ redirect_to }}" />
-  <select style="color:black" name="language">
+  <select id="language-switcher" class="form-control" name="language">
     {% get_current_language as LANGUAGE_CODE %}
     {% get_available_languages as LANGUAGES %}
     {% get_language_info_list for LANGUAGES as languages %}
@@ -13,5 +12,4 @@
       </option>
     {% endfor %}
   </select>
-  <button type="submit" class="btn btn-primary btn-xs"> {% trans "Go" %} </button>
 </form>

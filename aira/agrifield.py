@@ -238,7 +238,7 @@ class AgrifieldSWBResultsMixin:
         timeseries = self.results["timeseries"]
         if "theta" in timeseries:
             timeseries["theta_actual"] = np.minimum(timeseries["theta"], self.theta_s)
-        return timeseries[forecast_start_date:]
+        return timeseries.loc[forecast_start_date:]
 
     @property
     def last_irrigation_is_outdated(self):

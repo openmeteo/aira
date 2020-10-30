@@ -2,11 +2,11 @@
 
 {% if f.last_irrigation_is_outdated %}
   <div class="alert alert-warning">
-    {% url 'create_irrlog' pk=f.id as irrlog_url %}
+    {% url 'applied-irrigations' username=request.user.username agrifield_id=f.id as applied_irrigation_url %}
     <a href="#" class="close" data-dismiss="alert">&times;</a><span class="label label-warning"><i class="fa fa-exclamation-triangle ">&nbsp;{% trans "Warning" %}</i></span>  &nbsp;
-    {% blocktrans with irrlog_url=irrlog_url %}
+    {% blocktrans with applied_irrigation_url=applied_irrigation_url %}
         You haven't registered any irrigation, or the latest one is too old.
-        <a href="{{ irrlog_url }}">Update irrigations</a>.
+        <a href="{{ applied_irrigation_url }}">Update irrigations</a>.
     {% endblocktrans %}
     <br>
   </div>

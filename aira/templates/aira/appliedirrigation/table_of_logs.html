@@ -2,7 +2,7 @@
 
 <div class="table-responsive">
   <table class="table">
-    <h4> {% trans "List of irrigations" %}, <a href="{% url 'update_agrifield' agrifield.id %}">{{ agrifield.name }}</a></h4>
+    <h4> {% trans "List of irrigations" %}, <a href="{% url 'agrifield-update' request.user.username agrifield.id %}">{{ agrifield.name }}</a></h4>
     <hr>
     <thead>
       <tr>
@@ -16,10 +16,10 @@
       {% for applied_irrigation in agrifield.appliedirrigation_set.all  %}
         <tr>
           <td>{{ applied_irrigation.id }}</td>
-          <td><a href="{% url 'update_irrlog' applied_irrigation.id %}">{{applied_irrigation.timestamp}}</a></td>
+          <td><a href="{% url 'applied-irrigation-update' request.user.username agrifield.id applied_irrigation.id %}">{{applied_irrigation.timestamp}}</a></td>
           <td align="center">{{applied_irrigation.volume|floatformat:"2"}}</td>
           {% if user.username != "demo" %}
-            <td><a href="{% url 'delete_irrlog' applied_irrigation.id %}">{% trans "Delete" %} </a></td>
+            <td><a href="{% url 'applied-irrigation-delete' request.user.username agrifield.id applied_irrigation.id %}">{% trans "Delete" %} </a></td>
           {% else %}
             <td -</td>
           {% endif %}

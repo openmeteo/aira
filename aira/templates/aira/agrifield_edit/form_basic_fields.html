@@ -25,8 +25,8 @@
       {% endif %}
     </button>
     {% if object %}
-      <a class="btn btn-danger btn-xs" href="{% url "delete_agrifield" object.id %}">{% trans "Delete" %}</a>
+      <a class="btn btn-danger btn-xs" href="{% url "agrifield-delete" object.owner.username object.id %}">{% trans "Delete" %}</a>
     {% endif %}
   {% endif %}
-  <a class="btn btn-success btn-xs" href="{% url 'home' agrifield_owner %}"> {% trans "Back" %} </a>
+  <a class="btn btn-success btn-xs" href="{% url 'agrifield-list' agrifield_owner %}"> {% trans "Back" %} </a>
 {% endbuttons %}
