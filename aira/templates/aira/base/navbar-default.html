@@ -28,7 +28,7 @@
               </a>
               <ul class="dropdown-menu" role="menu">
                 {% if user.profile.id %}
-                  <li><a href="{% url 'edit_profile' user.profile.id  %}">{% trans "Account" %}</a></li>
+                  <li><a href="{% url 'edit_profile' user.username  %}">{% trans "Account" %}</a></li>
                 {% else %}
                   <li><a href="{% url 'create_profile' %}">{% trans "Account" %}</a></li>
                 {% endif %}

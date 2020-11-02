@@ -37,3 +37,16 @@ class ProfileViewsTestCase(TestCase):
         response = self.client.post("/accounts/delete_user/bob/")
         self.assertEqual(response.status_code, 302)
         self.assertFalse(User.objects.filter(username="bob").exists())
+
+
+class ProfileLinkTestCase(TestCase):
+    def setUp(self):
+        self.bob = User.objects.create_user(id=55, username="bob", password="topsecret")
+        self.bob.profile.first_name = "Bob"
+        self.bob.profile.last_name = "Brown"
+        self.bob.profile.save()
+        self.client.login(username="bob", password="topsecret")
+
+    def test_navbar_contains_profile_link(self):
+        response = self.client.get("/")
+        self.assertContains(response, 'href="/accounts/edit_profile/bob/"')
