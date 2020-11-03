@@ -298,7 +298,11 @@ class AppliedIrrigationViewMixin:
 
     def get_success_url(self):
         return reverse(
-            "agrifield-list", kwargs={"username": self.object.agrifield.owner}
+            "applied-irrigations",
+            kwargs={
+                "username": self.object.agrifield.owner,
+                "agrifield_id": self.object.agrifield.id,
+            },
         )
 
 
@@ -327,7 +331,7 @@ def remove_supervisee_from_user_list(request, username):
     supervisee_profile.supervisor = None
     supervisee_profile.save()
     return HttpResponseRedirect(
-        reverse("agrifield-list", kwargs={"username": request.user.username})
+        reverse("supervisees", kwargs={"username": request.user.username})
     )
 
 

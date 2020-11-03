@@ -8,7 +8,7 @@
     {% for f in agrifields %}
       {
         name: "{{ f.name }}",
-        url: "{% url 'agrifield-update' request.user.username f.id %}",
+        url: "{% url 'agrifield-update' f.owner.username f.id %}",
         coords: [{{ f.location.coords|cut:"("|cut:")" }}],
       },
     {% endfor %}

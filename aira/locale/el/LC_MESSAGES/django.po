@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-29 20:04+0200\n"
+"POT-Creation-Date: 2020-11-03 10:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -299,7 +299,7 @@ msgid "Delete"
 msgstr "Διαγραφή"
 
 #: aira/templates/aira/agrifield_edit/form_basic_fields.html:22
-#: aira/templates/aira/appliedirrigation/create.html:19
+#: aira/templates/aira/appliedirrigation/create.html:20
 #: aira/templates/aira/appliedirrigation/update.html:19
 #: aira/templates/aira/profile/form.html:21
 msgid "Update"
@@ -310,7 +310,7 @@ msgid "Add"
 msgstr "Πρόσθεση"
 
 #: aira/templates/aira/agrifield_edit/form_basic_fields.html:31
-#: aira/templates/aira/appliedirrigation/create.html:20
+#: aira/templates/aira/appliedirrigation/create.html:21
 #: aira/templates/aira/appliedirrigation/update.html:20
 msgid "Back"
 msgstr "Επιστροφή"
@@ -479,17 +479,12 @@ msgid "or"
 msgstr "ή"
 
 #: aira/templates/aira/agrifield_list/agrifield/results_warnings.html:7
-#, python-format
-msgid ""
-"\n"
-"        You haven't registered any irrigation, or the latest one is too "
-"old.\n"
-"        <a href=\"%(applied_irrigation_url)s\">Update irrigations</a>.\n"
-"    "
-msgstr ""
-"\n"
-"Δεν έχετε καταχωρήσει άρδευση, ή η τελευταία καταχωρημένη είναι πολύ "
-"παλιά.        <a href=\"%(applied_irrigation_url)s\">Ενημέρωση αρδεύσεων</a>."
+msgid "You haven't registered any irrigation, or the latest one is too old."
+msgstr "Δεν έχετε καταχωρήσει άρδευση, ή η τελευταία καταχωρημένη είναι πολύ παλιά."
+
+#: aira/templates/aira/agrifield_list/agrifield/results_warnings.html:8
+msgid "Update irrigations"
+msgstr "Ενημέρωση αρδεύσεων"
 
 #: aira/templates/aira/agrifield_list/js.html:18
 #, python-format
@@ -572,7 +567,12 @@ msgstr ""
 "%(applied_irrigation_time)s;\n"
 "          "
 
-#: aira/templates/aira/appliedirrigation/create.html:11
+#: aira/templates/aira/appliedirrigation/create.html:9
+#, python-format
+msgid "Irrigations applied on %(ownername)s's field %(fieldname)s"
+msgstr "Αρδεύσεις που πραγματοποιήθηκαν στο αγροτεμάχιο %(fieldname)s του χρήστη %(ownername)s"
+
+#: aira/templates/aira/appliedirrigation/create.html:12
 msgid "Add irrigation"
 msgstr "Πρόσθεση άρδευσης"
 

@@ -110,6 +110,68 @@ class WrongUsernameTestMixin:
         self.assertEqual(response.status_code, 404)
 
 
+class SupervisedAgrifieldDetailLinksTestCase(DataTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.supervisor = User.objects.create_user(username="john", password="topsecret")
+        cls.user.profile.supervisor = cls.supervisor
+        cls.user.profile.save()
+        AppliedIrrigation.objects.all().delete()
+
+    @classmethod
+    def setUpClass(self):
+        super().setUpClass()
+        client = Client()
+        client.login(username="john", password="topsecret")
+        response = client.get("/bob/fields/")
+        self.soup = BeautifulSoup(response.content.decode(), "html.parser")
+
+    def test_applied_irrigations_button(self):
+        href = self.soup.find(id="btn-applied-irrigations-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/appliedirrigations/")
+
+    def test_agrifield_report_button(self):
+        href = self.soup.find(id="btn-agrifield-report-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/report/")
+
+    def test_irrigation_performance_button(self):
+        href = self.soup.find(id="btn-irrigation-performance-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/performance/")
+
+    def test_weather_history_temperature_button(self):
+        href = self.soup.find(id="btn-weather-history-temperature-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/timeseries/temperature/")
+
+    def test_weather_history_humidity_button(self):
+        href = self.soup.find(id="btn-weather-history-humidity-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/timeseries/humidity/")
+
+    def test_weather_history_rainfall_button(self):
+        href = self.soup.find(id="btn-weather-history-rainfall-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/timeseries/rain/")
+
+    def test_weather_history_solar_radiation_button(self):
+        href = self.soup.find(id="btn-weather-history-solar-radiation-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/timeseries/solar_radiation/")
+
+    def test_weather_history_wind_speed_button(self):
+        href = self.soup.find(id="btn-weather-history-wind-speed-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/timeseries/wind_speed/")
+
+    def test_weather_history_evaporation_button(self):
+        href = self.soup.find(id="btn-weather-history-evaporation-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/timeseries/evaporation/")
+
+    def test_update_agrifield_button(self):
+        href = self.soup.find(id="btn-update-agrifield-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/edit/")
+
+    def test_applied_irrigations_link_in_warning(self):
+        href = self.soup.find(id="link-applied-irrigations-warning-1")["href"]
+        self.assertEqual(href, "/bob/fields/1/appliedirrigations/")
+
+
 class UpdateAgrifieldViewTestCase(WrongUsernameTestMixin, DataTestCase):
     wrong_username_test_mixin_url_remainder = "edit"
 
@@ -532,13 +594,20 @@ class RemoveSuperviseeTestCase(DataTestCase):
         response = self.client.get("/bob/supervisees/")
         self.assertContains(response, 'href="/charlie/fields/"')
 
+    def test_supervisee_remove_button_input_field(self):
+        self.client.login(username="bob", password="topsecret")
+        response = self.client.get("/bob/supervisees/")
+        soup = BeautifulSoup(response.content.decode(), "html.parser")
+        input_field = soup.find("input", attrs={"name": "supervisee_id"})
+        self.assertEqual(input_field["value"], "56")
+
     def test_remove_charlie_from_supervisees(self):
         assert User.objects.get(username="charlie").profile.supervisor is not None
         self.client.login(username="bob", password="topsecret")
         response = self.client.post(
             "/bob/supervisees/remove/", data={"supervisee_id": "56"}
         )
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/bob/supervisees/")
         self.assertIsNone(User.objects.get(username="charlie").profile.supervisor)
 
     def test_attempting_to_remove_charlie_when_not_logged_in_returns_404(self):
@@ -902,22 +971,23 @@ class AppliedIrrigationWrongAgrifieldTestMixin:
     See also WrongUsernameTestMixin.
     """
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         owner = User.objects.create_user(username="bob", password="topsecret")
-        self.client.login(username="bob", password="topsecret")
-        self.agrifield = mommy.make(Agrifield, owner=owner)
-        self.applied_irrigation = mommy.make(
-            AppliedIrrigation, agrifield=self.agrifield, id=101
+        cls.agrifield = mommy.make(Agrifield, owner=owner)
+        cls.agrifield2 = mommy.make(Agrifield, owner=owner)
+        cls.applied_irrigation = mommy.make(
+            AppliedIrrigation, agrifield=cls.agrifield, id=101
         )
 
     def test_wrong_agrifield_results_in_404(self):
         remainder = self.applied_irrigation_wrong_agrifield_test_mixin_url_remainder
         self.client.login(username=self.agrifield.owner.username, password="topsecret")
-        assert 1987 != self.agrifield.id
-        response = self.client.get(
-            f"/{self.agrifield.owner.username}/fields/1987/applied_irrigations/"
-            f"{self.applied_irrigation.id}/{remainder}/"
+        url = (
+            f"/{self.agrifield.owner.username}/fields/{self.agrifield2.id}/"
+            f"appliedirrigations/{self.applied_irrigation.id}/{remainder}/"
         )
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
 
@@ -933,6 +1003,66 @@ class AppliedIrrigationDeleteViewTestCase(
 ):
     wrong_username_test_mixin_url_remainder = "appliedirrigations/101/delete"
     applied_irrigation_wrong_agrifield_test_mixin_url_remainder = "delete"
+
+    def test_redirection(self):
+        self.client.login(username="bob", password="topsecret")
+        field_id = self.agrifield.id
+        response = self.client.post(
+            f"/bob/fields/{field_id}/appliedirrigations/101/delete/"
+        )
+        self.assertRedirects(response, f"/bob/fields/{field_id}/appliedirrigations/")
+
+
+class SupervisedAgrifieldAppliedIrrigationLinksTestCase(DataTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.supervisor = User.objects.create_user(username="john", password="topsecret")
+        cls.user.profile.supervisor = cls.supervisor
+        cls.user.profile.save()
+        cls.applied_irrigation = mommy.make(
+            AppliedIrrigation, agrifield=cls.agrifield, id=101
+        )
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        client = Client()
+        client.login(username="john", password="topsecret")
+        response = client.get("/bob/fields/1/appliedirrigations/")
+        cls.soup = BeautifulSoup(response.content.decode(), "html.parser")
+
+    def test_update_applied_irrigation_link(self):
+        href = self.soup.find(id="link-update-applied-irrigation-101")["href"]
+        self.assertEqual(href, "/bob/fields/1/appliedirrigations/101/edit/")
+
+    def test_delete_applied_irrigation_link(self):
+        href = self.soup.find(id="link-delete-applied-irrigation-101")["href"]
+        self.assertEqual(href, "/bob/fields/1/appliedirrigations/101/delete/")
+
+
+class SupervisedAgrifieldAppliedIrrigationEditLinksTestCase(DataTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.supervisor = User.objects.create_user(username="john", password="topsecret")
+        cls.user.profile.supervisor = cls.supervisor
+        cls.user.profile.save()
+        cls.applied_irrigation = mommy.make(
+            AppliedIrrigation, agrifield=cls.agrifield, id=101
+        )
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        client = Client()
+        client.login(username="john", password="topsecret")
+        response = client.get("/bob/fields/1/appliedirrigations/101/edit/")
+        cls.soup = BeautifulSoup(response.content.decode(), "html.parser")
+
+    def test_back_button(self):
+        href = self.soup.find(id="btn-back")["href"]
+        self.assertEqual(href, "/bob/fields/1/appliedirrigations/")
 
 
 @skipUnless(getattr(settings, "SELENIUM_WEBDRIVERS", False), "Selenium is unconfigured")

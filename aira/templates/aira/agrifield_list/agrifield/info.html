@@ -4,5 +4,5 @@
 <p>
   {{ f.crop_type.name }}, {{ f.irrigation_type.name}}
   {% if f.is_virtual %}<span class="text-warning">({% trans "Virtual" %})</span>{% endif %}
-  (<a btn-success btn-xs" href="{% url 'agrifield-update' request.user.username f.id %}">{% trans "Update field" %}</a>)
+  (<a id="btn-update-agrifield-{{ f.id }}" class="btn-success btn-xs" href="{% url 'agrifield-update' f.owner.username f.id %}">{% trans "Update field" %}</a>)
 </p>
