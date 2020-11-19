@@ -10,20 +10,20 @@
 {% block content %}
   <div class="row">
     <div class="col-lg-6">
-      {% include "aira/recommendation/map.html" %}
+      {% include "aira/agrifield_report/map.html" %}
     </div>
     <div class="col-lg-6">
-      {% include "aira/recommendation/fieldinfo.html" %}
+      {% include "aira/agrifield_report/fieldinfo.html" %}
     </div>
   </div>
   <div class="container">
     <div class="panel panel-default">
-      {% include "aira/recommendation/agrifield_results.html" %}
+      {% include "aira/agrifield_report/agrifield_results.html" %}
     </div>
   </div>
 {% endblock %}
 
 
 {% block extrajs %}
-  {% include "aira/recommendation/js.html" %}
+  {% include "aira/agrifield_report/js.html" %}
 {% endblock extrajs %}

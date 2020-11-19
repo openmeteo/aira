@@ -4,7 +4,7 @@
 [![Coverage Status][codecov-button]][codecov]
 
 [travis-button]: http://img.shields.io/travis/openmeteo/aira.svg
-[travis]: https://travis-ci.org/openmeteo/aira
+[travis]: https://travis-ci.com/github/openmeteo/aira
 [codecov-button]: https://codecov.io/gh/openmeteo/aira/branch/master/graph/badge.svg
 [codecov]: https://codecov.io/gh/openmeteo/aira
 
@@ -57,6 +57,11 @@ In addition, it supports these settings:
 - **AIRA_CELERY_SEND_TASK_ERROR_EMAILS**. By default, this has the value
   `False`. If you set it to `True`, whenever a Celery task encounters an
   error (raises an uncaught exception), the admins will be emailed.
+
+- **AIRA_THE_THINGS_NETWORK_ACCESS_KEY**,
+  **AIRA_THE_THINGS_NETWORK_BASE_URL**. These are used to get telemetric
+  flowmeter measurements so that applied irrigations are registered
+  automatically. They are used if the user enters a device id.
 
 ## Soil data
 

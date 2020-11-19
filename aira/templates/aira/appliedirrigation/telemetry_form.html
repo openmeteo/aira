@@ -1,0 +1,22 @@
+{% load i18n %}
+{% load bootstrap3 %}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    {% trans "Telemetry" %}
+  </div>
+  <div class="panel-body">
+    <form method="post" role="form" id="{{ flowmeter_type.value }}-form">
+      {% csrf_token %}
+      {% include "./flowmeter_type_dropdown.html" %}
+      {% for flowmeter_type in telemetric_flowmeter_types %}
+        <div id="flowmeter-parameters-{{ flowmeter_type.name }}" style="display: none">
+          {% bootstrap_form flowmeter_type.form %}
+        </div>
+      {% endfor %}
+      {% if user.username != "demo" %}
+        <input type="submit" class="btn btn-success" value="{% trans "Submit" %}">
+      {% endif %}
+    </form>
+  </div>
+</div>

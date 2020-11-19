@@ -2,7 +2,7 @@
 
 <div class="panel panel-default">
   <div class="panel-heading">
-    <b>{% trans "Field name" %}:</b> <a href="{% url 'update_agrifield' object.id %}">{{ object.name }}</a>
+    <b>{% trans "Field name" %}:</b> <a href="{% url 'agrifield-update' object.owner.username object.id %}">{{ object.name }}</a>
   </div>
   <div class="panel-body">
     <div id="map" class="map"></div>

@@ -1,0 +1,26 @@
+{% load i18n %}
+
+<div>
+  <a id="btn-applied-irrigations-{{ f.id }}" class="btn btn-success" href="{% url 'applied-irrigations' username=f.owner.username agrifield_id=f.id %}">
+    {% trans "Irrigations applied" %}
+  </a>
+  <a id="btn-agrifield-report-{{ f.id }}" class="btn btn-success" href="{% url 'agrifield-report' f.owner.username f.id %}">
+    {% trans "Irrigation report" %}
+  </a>
+  <a id="btn-irrigation-performance-{{ f.id }}" class="btn btn-success" href="{% url 'agrifield-irrigation-performance' f.owner.username f.id %}">
+     {% trans "Irrigation performance" %}
+  </a>
+  <div class="btn-group">
+    <button class="btn btn-success dropdown-toggle" data-toggle="dropdown" aira-haspopup="true" aria-expanded="false">
+      {% trans "Weather history" %} <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu">
+      <li><a id="btn-weather-history-temperature-{{ f.id }}" href="{% url "agrifield-timeseries" f.owner.username f.id "temperature" %}">{% trans "Air temperature" %}</a></li>
+      <li><a id="btn-weather-history-humidity-{{ f.id }}" href="{% url "agrifield-timeseries" f.owner.username f.id "humidity" %}">{% trans "Relative humidity" %}</a></li>
+      <li><a id="btn-weather-history-rainfall-{{ f.id }}" href="{% url "agrifield-timeseries" f.owner.username f.id "rain" %}">{% trans "Rainfall" %}</a></li>
+      <li><a id="btn-weather-history-solar-radiation-{{ f.id }}" href="{% url "agrifield-timeseries" f.owner.username f.id "solar_radiation" %}">{% trans "Solar radiation" %}</a></li>
+      <li><a id="btn-weather-history-wind-speed-{{ f.id }}" href="{% url "agrifield-timeseries" f.owner.username f.id "wind_speed" %}">{% trans "Wind speed" %}</a></li>
+      <li><a id="btn-weather-history-evaporation-{{ f.id }}" href="{% url "agrifield-timeseries" f.owner.username f.id "evaporation" %}">{% trans "Reference evapotranspiration" %}</a></li>
+    </ul>
+  </div>
+</div>

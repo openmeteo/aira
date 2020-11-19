@@ -42,6 +42,7 @@ class RegistrationFormTestCase(TestCase):
 class AppliedIrrigationFormTestCase(TestCase):
     def setUp(self):
         self.data = {
+            "agrifield": mommy.make(models.Agrifield).id,
             "timestamp": "2020-02-02",
         }
 

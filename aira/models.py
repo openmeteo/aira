@@ -2,7 +2,9 @@ import csv
 import datetime as dt
 import math
 import os
+import sys
 from collections import OrderedDict
+from decimal import Decimal
 from glob import iglob
 from io import StringIO
 
@@ -12,6 +14,7 @@ from django.contrib.gis.db import models
 from django.core.cache import cache
 from django.core.files.storage import FileSystemStorage
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models import Q, UniqueConstraint
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.http import Http404
@@ -70,14 +73,18 @@ class Profile(models.Model):
         choices=EMAIL_LANGUAGE_CHOICES,
     )
     supervisor = models.ForeignKey(
-        User, related_name="supervisor", null=True, blank=True, on_delete=models.CASCADE
+        User,
+        related_name="supervisees",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
     )
     supervision_question = models.BooleanField(choices=YES_OR_NO, default=False)
 
     class Meta:
         verbose_name_plural = "Profiles"
 
-    def get_supervised(self):
+    def get_supervisee(self):
         return Profile.objects.filter(supervisor=self.user)
 
     def __str__(self):
@@ -161,7 +168,10 @@ class IrrigationType(models.Model):
 class SoilAnalysisStorage(FileSystemStorage):
     def url(self, name):
         agrifield = Agrifield.objects.get(soil_analysis=name)
-        return reverse("agrifield-soil-analysis", kwargs={"agrifield_id": agrifield.id})
+        return reverse(
+            "agrifield-soil-analysis",
+            kwargs={"username": agrifield.owner.username, "agrifield_id": agrifield.id},
+        )
 
 
 class Agrifield(models.Model, AgrifieldSWBMixin, AgrifieldSWBResultsMixin):
@@ -472,30 +482,29 @@ class AgrifieldCustomKcStage(KcStage):
 
 
 class AppliedIrrigation(models.Model):
-
     IRRIGATION_TYPES = [
         ("VOLUME_OF_WATER", _("Volume of water")),
         ("DURATION_OF_IRRIGATION", _("Duration of irrigation")),
         ("FLOWMETER_READINGS", _("Flowmeter readings")),
     ]
-
     irrigation_type = models.CharField(
         max_length=50, choices=IRRIGATION_TYPES, default="VOLUME_OF_WATER"
     )
+    is_automatically_reported = models.BooleanField(
+        verbose_name=_("Is automatically added by a telemetric flowmeter"),
+        default=False,
+    )
     agrifield = models.ForeignKey(Agrifield, on_delete=models.CASCADE)
     timestamp = models.DateTimeField()
-
     supplied_water_volume = models.FloatField(
         null=True, blank=True, validators=[MinValueValidator(0.0)]
     )
-
     supplied_duration = models.PositiveIntegerField(
         "Duration in minutes", null=True, blank=True
     )
     supplied_flow_rate = models.FloatField(
         "Flow rate (m3/h)", null=True, blank=True, validators=[MinValueValidator(0.0)]
     )
-
     flowmeter_reading_start = models.FloatField(
         null=True, blank=True, validators=[MinValueValidator(0.0)]
     )
@@ -537,6 +546,14 @@ class AppliedIrrigation(models.Model):
     class Meta:
         get_latest_by = "timestamp"
         ordering = ("-timestamp",)
+        # For automated reporting, avoid duplicated data points.
+        constraints = [
+            UniqueConstraint(
+                fields=["supplied_water_volume", "timestamp", "agrifield"],
+                condition=Q(is_automatically_reported=True),
+                name="unique_automatic_flowmeter_irrigations",
+            )
+        ]
 
     def __str__(self):
         return str(self.timestamp)
@@ -548,3 +565,61 @@ class AppliedIrrigation(models.Model):
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)
         self.agrifield._queue_for_calculation()
+
+
+class TelemetricFlowmeter(models.Model):
+    TYPES = ["LoRA_ARTA"]
+
+    agrifield = models.OneToOneField(Agrifield, on_delete=models.CASCADE)
+    flowmeter_water_percentage = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(100)],
+        help_text=_("Percentage of water that corresponds to the flowmeter (%)"),
+    )
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def delete_all(cls, agrifield):
+        for flowmeter_type in cls.TYPES:
+            this_module = sys.modules[__name__]
+            flowmeter_class = getattr(this_module, f"{flowmeter_type}Flowmeter")
+            flowmeter_class.objects.filter(agrifield=agrifield).delete()
+
+
+class LoRA_ARTAFlowmeter(TelemetricFlowmeter):
+    device_id = models.CharField(max_length=100)
+    conversion_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal("6.8")
+    )
+    report_frequency_in_minutes = models.PositiveSmallIntegerField(default=5)
+
+    def _calculate_water_volume(self, sensor_frequency):
+        return (
+            Decimal(self.flowmeter_water_percentage / 100)
+            * self.report_frequency_in_minutes
+            * sensor_frequency
+            / self.conversion_rate
+        )
+
+    def create_irrigations_in_bulk(self, data_points):
+        kwargs_list = [
+            {
+                "is_automatically_reported": True,
+                "irrigation_type": "VOLUME_OF_WATER",
+                "supplied_water_volume": self._calculate_water_volume(
+                    point["sensor_frequency"]
+                ),
+                "agrifield_id": self.agrifield_id,
+                "timestamp": point["timestamp"],
+            }
+            for point in data_points
+        ]
+
+        # We use `ignore_conflicts` in case TTN reports duplicate data points.
+        # So with a `unique_together` constraint on volume, timestamp, and agrifield, we
+        # can skip such points if they appear.
+        AppliedIrrigation.objects.bulk_create(
+            [AppliedIrrigation(**kwargs) for kwargs in kwargs_list],
+            ignore_conflicts=True,
+        )

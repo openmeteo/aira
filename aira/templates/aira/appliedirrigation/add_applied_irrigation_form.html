@@ -1,0 +1,17 @@
+{% load i18n %}
+{% load bootstrap3 %}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    {% trans "Add irrigation" %}
+  </div>
+  <div class="panel-body">
+    <form method="post" role="form" class="form">
+      {% csrf_token %}
+      {% bootstrap_form add_irrigation_form %}
+      {% if user.username != "demo" %}
+        <input type="submit" class="btn btn-success" value="{% trans "Submit" %}">
+      {% endif %}
+    </form>
+  </div>
+</div>

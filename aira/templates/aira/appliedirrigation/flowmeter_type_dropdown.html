@@ -1,0 +1,13 @@
+{% load i18n %}
+
+<div class="form-group">
+  <label class="control-label" for="flowmeter_type-dropdown">Choose flowmeter type</label>
+  <select id="flowmeter_type-dropdown" class="form-control" name="flowmeter_type">
+    <option value="">{% trans "No telemetric flowmeter" %}</option>
+    {% for flowmeter_type in telemetric_flowmeter_types %}
+      <option value="{{ flowmeter_type.name }}" {% if flowmeter_type.selected %} selected {% endif %}>
+        {{ flowmeter_type.name }}
+      </option>
+    {% endfor %}
+  </select>
+</div>

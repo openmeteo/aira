@@ -65,6 +65,7 @@ TEMPLATES = [
                 "django.template.context_processors.media",
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
+                "django.template.context_processors.request",
                 "django.contrib.messages.context_processors.messages",
                 "aira.context_processors.map",
             ]
@@ -73,7 +74,7 @@ TEMPLATES = [
 ]
 
 ACCOUNT_ACTIVATION_DAYS = 3
-LOGIN_REDIRECT_URL = "/home"
+LOGIN_REDIRECT_URL = "/my_fields/"
 
 AIRA_DATA_HISTORICAL = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../../../rasters_historical")
@@ -150,3 +151,6 @@ if os.environ.get("SELENIUM_BROWSER", False):
             "kwargs": {},
         }
     }
+
+AIRA_THE_THINGS_NETWORK_ACCESS_KEY = ""
+AIRA_THE_THINGS_NETWORK_BASE_URL = ""

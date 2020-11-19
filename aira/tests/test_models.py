@@ -7,6 +7,7 @@ from unittest import mock
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.core.files.base import ContentFile
+from django.db import IntegrityError
 from django.http.response import Http404
 from django.test import TestCase, override_settings
 
@@ -144,7 +145,7 @@ class AgrifieldDeletesCachedPointTimeseriesOnSave(AgrifieldTestCaseBase):
 class AgrifieldSoilAnalysisTestCase(TestCase, RandomMediaRootMixin):
     def setUp(self):
         self.override_media_root()
-        self.agrifield = mommy.make(models.Agrifield)
+        self.agrifield = mommy.make(models.Agrifield, owner__username="bob")
         self.agrifield.soil_analysis.save("somefile", ContentFile("hello world"))
 
     def tearDown(self):
@@ -157,7 +158,7 @@ class AgrifieldSoilAnalysisTestCase(TestCase, RandomMediaRootMixin):
     def test_file_url(self):
         self.assertEqual(
             self.agrifield.soil_analysis.url,
-            "/agrifield/{}/soil_analysis/".format(self.agrifield.id),
+            "/bob/fields/{}/soil_analysis/".format(self.agrifield.id),
         )
 
 
@@ -362,3 +363,163 @@ class AppliedIrrigationTestCase(TestCase):
                 models.AppliedIrrigation, irrigation_type="DURATION_OF_IRRIGATION"
             )
             self.assertIsNone(irrigation.volume)
+
+
+class AppliedIrrigationUniqueTogetherConstraintTestCase(TestCase):
+    def test_duplicate_point_raises(self):
+        time = dt.datetime(2020, 10, 10, 0, 0, tzinfo=dt.timezone.utc)
+        agrifield = mommy.make(models.Agrifield)
+        self.assertEqual(models.AppliedIrrigation.objects.count(), 0)
+        mommy.make(
+            models.AppliedIrrigation,
+            agrifield=agrifield,
+            is_automatically_reported=True,
+            irrigation_type="VOLUME_OF_WATER",
+            supplied_water_volume=1337,
+            timestamp=time,
+        )
+        with self.assertRaises(IntegrityError):
+            mommy.make(
+                models.AppliedIrrigation,
+                agrifield=agrifield,
+                is_automatically_reported=True,
+                irrigation_type="VOLUME_OF_WATER",
+                supplied_water_volume=1337,
+                timestamp=time,
+            )
+
+    def test_different_agrifield_same_volume_and_time(self):
+        time = dt.datetime(2020, 10, 10, 0, 0, tzinfo=dt.timezone.utc)
+        self.assertEqual(models.AppliedIrrigation.objects.count(), 0)
+        mommy.make(
+            models.AppliedIrrigation,
+            is_automatically_reported=True,
+            irrigation_type="VOLUME_OF_WATER",
+            supplied_water_volume=1337,
+            timestamp=time,
+        )
+        mommy.make(
+            models.AppliedIrrigation,
+            is_automatically_reported=True,
+            irrigation_type="VOLUME_OF_WATER",
+            supplied_water_volume=1337,
+            timestamp=time,
+        )
+        self.assertEqual(models.AppliedIrrigation.objects.count(), 2)
+
+    def test_same_agrifield_diff_volume_same_time(self):
+        time = dt.datetime(2020, 10, 10, 0, 0, tzinfo=dt.timezone.utc)
+        agrifield = mommy.make(models.Agrifield)
+        self.assertEqual(models.AppliedIrrigation.objects.count(), 0)
+        mommy.make(
+            models.AppliedIrrigation,
+            agrifield=agrifield,
+            is_automatically_reported=True,
+            irrigation_type="VOLUME_OF_WATER",
+            supplied_water_volume=1337,
+            timestamp=time,
+        )
+        mommy.make(
+            models.AppliedIrrigation,
+            agrifield=agrifield,
+            is_automatically_reported=True,
+            irrigation_type="VOLUME_OF_WATER",
+            supplied_water_volume=1337 + 1,
+            timestamp=time,
+        )
+        self.assertEqual(models.AppliedIrrigation.objects.count(), 2)
+
+    def test_same_agrifield_same_volume_diff_time(self):
+        agrifield = mommy.make(models.Agrifield)
+        self.assertEqual(models.AppliedIrrigation.objects.count(), 0)
+        mommy.make(
+            models.AppliedIrrigation,
+            agrifield=agrifield,
+            is_automatically_reported=True,
+            irrigation_type="VOLUME_OF_WATER",
+            supplied_water_volume=1337,
+        )
+        mommy.make(
+            models.AppliedIrrigation,
+            agrifield=agrifield,
+            is_automatically_reported=True,
+            irrigation_type="VOLUME_OF_WATER",
+            supplied_water_volume=1337,
+        )
+        self.assertEqual(models.AppliedIrrigation.objects.count(), 2)
+
+
+class TelemetricFlowmeterDeleteAllTestCase(TestCase):
+    def setUp(self):
+        self.flowmeter1 = mommy.make(models.LoRA_ARTAFlowmeter, agrifield__id=1)
+        self.flowmeter2 = mommy.make(models.LoRA_ARTAFlowmeter, agrifield__id=2)
+        models.TelemetricFlowmeter.delete_all(agrifield=self.flowmeter1.agrifield)
+
+    def test_flowmeter_of_agrifield1_have_been_deleted(self):
+        self.assertFalse(
+            models.LoRA_ARTAFlowmeter.objects.filter(agrifield__id=1).exists()
+        )
+
+    def test_flowmeter_of_agrifield2_have_not_been_deleted(self):
+        self.assertTrue(
+            models.LoRA_ARTAFlowmeter.objects.filter(agrifield__id=2).exists()
+        )
+
+
+class LoRA_ARTAFlowmeterTestCase(TestCase):
+    def setUp(self):
+        self.flowmeter = mommy.make(
+            models.LoRA_ARTAFlowmeter,
+            device_id="1337",
+            flowmeter_water_percentage=50,
+            report_frequency_in_minutes=15,
+        )
+
+    def test_calculate_water_volume(self):
+        """
+        Supplied sensor frequency as 10, thus 50% of the total value:
+        15(report freq) x 10(sensor freq) / 6.8(def. conversion)
+            = 22.058
+        """
+        water_volume = self.flowmeter._calculate_water_volume(10)
+        self.assertAlmostEqual(float(water_volume), 22.058 / 2, delta=0.01)
+
+    def test_points_created_as_automated_reporting(self):
+        data_points = [
+            {"sensor_frequency": 10, "timestamp": "2020-10-12T00:00:00.000000000Z"}
+        ]
+        self.assertEqual(self.flowmeter.agrifield.appliedirrigation_set.count(), 0)
+        self.flowmeter.create_irrigations_in_bulk(data_points)
+        self.assertEqual(self.flowmeter.agrifield.appliedirrigation_set.count(), 1)
+
+        irrigation = self.flowmeter.agrifield.appliedirrigation_set.latest()
+        expected_volume = float(self.flowmeter._calculate_water_volume(10))
+
+        self.assertTrue(irrigation.is_automatically_reported)
+        self.assertEqual(irrigation.irrigation_type, "VOLUME_OF_WATER")
+        self.assertAlmostEqual(
+            irrigation.supplied_water_volume, expected_volume, delta=0.01
+        )
+        self.assertEqual(
+            irrigation.timestamp,
+            dt.datetime(2020, 10, 12, 0, 0, tzinfo=dt.timezone.utc),
+        )
+
+    def test_duplicate_points_are_skipped(self):
+        # Ensure that if time is the same, but the volume is different, it will pass.
+        data_points = [
+            {"sensor_frequency": 10, "timestamp": "2020-10-10T00:00:00.000000000Z"},
+            {"sensor_frequency": 12, "timestamp": "2020-10-10T00:15:00.000000000Z"},
+            {"sensor_frequency": 15, "timestamp": "2020-10-10T00:30:00.000000000Z"},
+            {"sensor_frequency": 15, "timestamp": "2020-10-10T00:30:00.000000000Z"},
+            {"sensor_frequency": 16, "timestamp": "2020-10-10T00:30:00.000000000Z"},
+        ]
+
+        self.assertEqual(self.flowmeter.agrifield.appliedirrigation_set.count(), 0)
+        self.flowmeter.create_irrigations_in_bulk(data_points)
+        self.assertEqual(self.flowmeter.agrifield.appliedirrigation_set.count(), 4)
+        # Ensure that the removed duplicate was the duplicated volume indeed
+        volumes = self.flowmeter.agrifield.appliedirrigation_set.values_list(
+            "supplied_water_volume"
+        )
+        self.assertEqual(len(set(volumes)), 4)

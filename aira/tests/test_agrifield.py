@@ -151,12 +151,29 @@ class SetupTestDataMixin:
             models.AppliedIrrigation,
             agrifield=cls.agrifield,
             timestamp=dt.datetime(2018, 3, 15, 7, 0, tzinfo=dt.timezone.utc),
-            supplied_water_volume=500,
+            supplied_water_volume=300,
         )
+        # The following is on the same date as the previous, in order to check that
+        # the amounts are summed.
         cls.applied_irrigation_2 = mommy.make(
             models.AppliedIrrigation,
             agrifield=cls.agrifield,
+            timestamp=dt.datetime(2018, 3, 15, 17, 0, tzinfo=dt.timezone.utc),
+            supplied_water_volume=200,
+        )
+        cls.applied_irrigation_3 = mommy.make(
+            models.AppliedIrrigation,
+            agrifield=cls.agrifield,
             timestamp=dt.datetime(2018, 3, 19, 7, 0, tzinfo=dt.timezone.utc),
+            supplied_water_volume=10,
+        )
+        # The following is on the same date as the previous, in order to check that
+        # when one irrigation has the irrigation amount unspecified and the other has
+        # it specified, the unspecified one is used.
+        cls.applied_irrigation_4 = mommy.make(
+            models.AppliedIrrigation,
+            agrifield=cls.agrifield,
+            timestamp=dt.datetime(2018, 3, 19, 17, 0, tzinfo=dt.timezone.utc),
             supplied_water_volume=None,
         )
 
@@ -296,6 +313,9 @@ class NeedsIrrigationTestCase(TestCase):
     def setUp(self):
         self.agrifield = mommy.make(models.Agrifield, id=1)
 
+    def tearDown(self):
+        cache.delete("model_run_1")
+
     def _set_needed_irrigation_amount(self, amount):
         atimeseries = pd.Series(data=[amount], index=pd.DatetimeIndex(["2020-01-15"]))
         mock_model_run = {
@@ -371,14 +391,34 @@ class LastIrrigationIsOutdatedTestCase(DataTestCase):
 
     def test_true_if_irrigation_too_old(self, m):
         self.applied_irrigation_1.delete()
-        self.applied_irrigation_2.timestamp = dt.datetime(
+        self.applied_irrigation_2.delete()
+        self.applied_irrigation_3.delete()
+        self.applied_irrigation_4.timestamp = dt.datetime(
             2018, 3, 10, 20, 0, tzinfo=dt.timezone.utc
         )
-        self.applied_irrigation_2.save()
+        self.applied_irrigation_4.save()
         self.assertTrue(self.agrifield.last_irrigation_is_outdated)
 
     def test_false_if_irrigation_ok(self, m):
         self.assertFalse(self.agrifield.last_irrigation_is_outdated)
+
+
+@override_settings(TIME_ZONE="Europe/Athens")
+@patch(_in_covered_area, new_callable=PropertyMock, return_value=True)
+class AppliedIrrigationTimeZoneTestCase(DataTestCase):
+    def setUp(self):
+        super().setUp()
+        self.applied_irrigation_1.timestamp = dt.datetime(
+            2018, 3, 15, 0, 5, tzinfo=dt.timezone(dt.timedelta(hours=2), "EET")
+        )
+        self.applied_irrigation_1.save()
+        self.results = self.agrifield.execute_model()
+        self.timeseries = self.results["timeseries"]
+
+    def test_applied_irrigation_has_been_accounted_for_in_the_next_day(self, m):
+        var = "actual_net_irrigation"
+        timestamp = dt.datetime(2018, 3, 15, 23, 59)
+        self.assertAlmostEqual(self.timeseries[var].at[timestamp], 150)
 
 
 def mock_calculate_soil_water(**kwargs):

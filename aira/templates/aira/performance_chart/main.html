@@ -14,7 +14,7 @@
   <div id="irrchart" style="width:100%; height:400px;"></div>
   <div class="container">
     {% if object.results %}
-      <a style="float:right"  href="{% url 'performance_csv' object.id %}"> <i class="fa fa-cloud-download"></i> {% trans "Download chart data" %}</a><br>
+      <a style="float:right"  href="{% url 'agrifield-irrigation-performance-download' object.owner.username object.id %}"> <i class="fa fa-cloud-download"></i> {% trans "Download chart data" %}</a><br>
       <b>{% trans "Total effective precipitation" %}</b>: {{ object.results.timeseries.effective_precipitation.sum|floatformat:0 }} mm <br>
       <hr>
       <b>{% trans 'Total estimated irrigation water amount' %}</b>: {{ object.results.timeseries.ifinal_theoretical.sum|floatformat:0  }} mm <br>

@@ -26,10 +26,8 @@ class Command(BaseCommand):
 
             # If user is a supervisor, send an additional notification to him
             # for each of the supervised users.
-            for supervised_user in User.objects.filter(profile__supervisor=user):
-                self.notify_user(
-                    user, supervised_user.agrifield_set.all(), supervised_user
-                )
+            for supervisee in User.objects.filter(profile__supervisor=user):
+                self.notify_user(user, supervisee.agrifield_set.all(), supervisee)
 
     def must_send_notification(self, user):
         try:

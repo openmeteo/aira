@@ -1,0 +1,14 @@
+{% load static %}
+{% load i18n %}
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    {% include "aira/agrifield_list/agrifield/info.html" %}
+    {% include "aira/agrifield_list/agrifield/recalculation_warning.html" %}
+    {% if not f.in_covered_area %}
+      {% include "aira/agrifield_list/agrifield/outside_raster.html" %}
+    {% elif f.results %}
+      {% include "aira/agrifield_list/agrifield/results.html" %}
+    {% endif %}
+  </div>
+</div>

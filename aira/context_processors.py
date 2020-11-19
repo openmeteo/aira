@@ -10,12 +10,13 @@ def map(request):
         query_element = f"apikey={thunderforest_api_key}"
     lang = translation.get_language() or "en"
     map_default_center = ",".join([str(x) for x in settings.AIRA_MAP_DEFAULT_CENTER])
+    covered_area = _("Covered area")
     map_js = f"""
         aira.thunderforestApiKeyQueryElement = "{query_element}";
         aira.mapserverBaseUrl = "{settings.AIRA_MAPSERVER_BASE_URL}{lang}/";
         aira.mapDefaultCenter = [{map_default_center}];
         aira.mapDefaultZoom = {settings.AIRA_MAP_DEFAULT_ZOOM};
-        aira.strings = {{ covered_area: "{_("Covered area")}" }};
+        aira.strings = {{ covered_area: "{covered_area}" }};
         """
     return {
         "map_js": map_js,

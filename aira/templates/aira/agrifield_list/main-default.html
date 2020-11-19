@@ -1,0 +1,38 @@
+{% extends 'aira/base/main.html' %}
+{% load static %}
+{% load i18n %}
+
+{% load bootstrap3 %}
+
+{% block title %} {% blocktrans with username=url_username %}{{ username }}'s fields{% endblocktrans %}{% endblock %}
+
+{% block content %}
+  <h3>
+  {% blocktrans with username=url_username %}{{username}}'s fields{% endblocktrans %}
+  </h3>
+  {% if not profile %}
+    <div class="alert alert-warning">
+      <a href="#" class="close" data-dismiss="alert">&times;</a><i class="fa fa-hand-o-right"></i> &nbsp; <a href="{% url 'create_profile' %}">{% trans "Please update your personal information." %}</a>
+    </div>
+  {% endif %}
+
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <div id="map" class="map"></div>
+    </div>
+  </div>
+
+  {% for f in agrifields %}
+    {% include "aira/agrifield_list/agrifield/main.html" %}
+  {% endfor %}
+
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <a class="btn btn-success" href="{% url 'agrifield-create' url_username %}">{% trans "Add field" %}</a>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extrajs %}
+  {% include "aira/agrifield_list/js.html" %}
+{% endblock %}

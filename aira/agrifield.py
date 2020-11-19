@@ -81,11 +81,13 @@ class AgrifieldSWBMixin:
         end = tz.localize(self.timeseries.index[-1])
         applied_irrigations = self.appliedirrigation_set.filter(
             timestamp__range=(start, end)
-        )
+        ).order_by("timestamp")
         for applied_irrigation in applied_irrigations:
             date = dt.datetime.combine(
-                applied_irrigation.timestamp.date(), dt.time(23, 59)
+                applied_irrigation.timestamp.astimezone(tz).date(), dt.time(23, 59)
             )
+            if tz.localize(date) < start or tz.localize(date) > end:
+                continue
             volume = applied_irrigation.volume
             if volume is None:
                 # When an irrigation event has been logged but we don't know how
@@ -95,12 +97,12 @@ class AgrifieldSWBMixin:
                 # amount.
                 self.timeseries.at[date, "actual_net_irrigation"] = True
                 self.timeseries.at[date, "applied_irrigation"] = None
-            else:
+            elif self.timeseries.at[date, "actual_net_irrigation"] is not True:
                 applied_water_mm = float(volume / self.area * 1000)
-                self.timeseries.at[date, "actual_net_irrigation"] = (
+                self.timeseries.at[date, "actual_net_irrigation"] += (
                     applied_water_mm * self.irrigation_efficiency
                 )
-                self.timeseries.at[date, "applied_irrigation"] = applied_water_mm
+                self.timeseries.at[date, "applied_irrigation"] += applied_water_mm
 
     def _determine_crop_evapotranspiration(self):
         calculate_crop_evapotranspiration(
@@ -238,7 +240,7 @@ class AgrifieldSWBResultsMixin:
         timeseries = self.results["timeseries"]
         if "theta" in timeseries:
             timeseries["theta_actual"] = np.minimum(timeseries["theta"], self.theta_s)
-        return timeseries[forecast_start_date:]
+        return timeseries.loc[forecast_start_date:]
 
     @property
     def last_irrigation_is_outdated(self):

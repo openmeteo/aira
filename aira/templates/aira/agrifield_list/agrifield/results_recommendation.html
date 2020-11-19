@@ -1,6 +1,13 @@
 {% load i18n %}
+{% load static %}
 
-{% trans "Apply one of these alternatives:" %}
+<img
+  style="display:block;float:left;"
+  src="{% static 'img/warning.png' %}"
+  alt=""
+  height="20"
+  width="20"
+>&nbsp;{% trans "Apply one of these alternatives:" %}
 <br><br>
 <div class="row" id="{{f.id}}">
   <div class="col-md-12">
