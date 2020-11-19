@@ -18,8 +18,7 @@ from django.views.generic.list import ListView
 
 import pandas as pd
 
-from .forms import AgrifieldForm, AppliedIrrigationForm
-from .models import Agrifield, AppliedIrrigation, Profile
+from . import forms, models
 
 
 class CheckUsernameMixin:
@@ -33,7 +32,7 @@ class CheckUsernameMixin:
 
     def get_object(self, *args, **kwargs):
         agrifield = self.get_agrifield()
-        if self.model == Agrifield:
+        if getattr(self, "model", None) in (None, models.Agrifield):
             return agrifield
         result = super().get_object()
         if result.agrifield != agrifield:
@@ -43,12 +42,12 @@ class CheckUsernameMixin:
     def get_agrifield(self):
         agrifield_id = self.kwargs.get("agrifield_id") or self.kwargs.get("pk")
         return get_object_or_404(
-            Agrifield, pk=agrifield_id, owner__username=self.kwargs["username"]
+            models.Agrifield, pk=agrifield_id, owner__username=self.kwargs["username"]
         )
 
 
 class IrrigationPerformanceView(CheckUsernameMixin, DetailView):
-    model = Agrifield
+    model = models.Agrifield
     template_name = "aira/performance_chart/main.html"
 
     def get_context_data(self, **kwargs):
@@ -161,18 +160,18 @@ class AgrifieldListView(LoginRequiredMixin, TemplateView):
 
         # Fetch models.Profile(User)
         try:
-            context["profile"] = Profile.objects.get(user=self.request.user)
-        except Profile.DoesNotExist:
+            context["profile"] = models.Profile.objects.get(user=self.request.user)
+        except models.Profile.DoesNotExist:
             context["profile"] = None
         # Fetch models.Agrifield(User)
         try:
-            agrifields = Agrifield.objects.filter(owner=user).all()
+            agrifields = models.Agrifield.objects.filter(owner=user).all()
             for f in agrifields:
                 # Check if user is allowed or 404
                 f.can_edit(self.request.user)
             context["agrifields"] = agrifields
             context["fields_count"] = len(agrifields)
-        except Agrifield.DoesNotExist:
+        except models.Agrifield.DoesNotExist:
             context["agrifields"] = None
         return context
 
@@ -188,7 +187,7 @@ class MyFieldsView(RedirectView):
 
 
 class AgrifieldReportView(CheckUsernameMixin, LoginRequiredMixin, DetailView):
-    model = Agrifield
+    model = models.Agrifield
     template_name = "aira/agrifield_report/main.html"
 
     def get_context_data(self, **kwargs):
@@ -198,8 +197,8 @@ class AgrifieldReportView(CheckUsernameMixin, LoginRequiredMixin, DetailView):
 
 
 class CreateAgrifieldView(LoginRequiredMixin, CreateView):
-    model = Agrifield
-    form_class = AgrifieldForm
+    model = models.Agrifield
+    form_class = forms.AgrifieldForm
     template_name = "aira/agrifield_edit/main.html"
 
     def form_valid(self, form):
@@ -215,21 +214,21 @@ class CreateAgrifieldView(LoginRequiredMixin, CreateView):
         try:
             url_username = self.kwargs["username"]
             user = User.objects.get(username=url_username)
-            context["agrifields"] = Agrifield.objects.filter(owner=user).all()
+            context["agrifields"] = models.Agrifield.objects.filter(owner=user).all()
             context["agrifield_owner"] = user
 
-        except Agrifield.DoesNotExist:
+        except models.Agrifield.DoesNotExist:
             context["agrifields"] = None
         return context
 
 
 class UpdateAgrifieldView(CheckUsernameMixin, LoginRequiredMixin, UpdateView):
-    model = Agrifield
-    form_class = AgrifieldForm
+    model = models.Agrifield
+    form_class = forms.AgrifieldForm
     template_name = "aira/agrifield_edit/main.html"
 
     def get_success_url(self):
-        field = Agrifield.objects.get(pk=self.kwargs["pk"])
+        field = models.Agrifield.objects.get(pk=self.kwargs["pk"])
         return reverse("agrifield-list", kwargs={"username": field.owner})
 
     def get_context_data(self, **kwargs):
@@ -240,34 +239,124 @@ class UpdateAgrifieldView(CheckUsernameMixin, LoginRequiredMixin, UpdateView):
 
 
 class DeleteAgrifieldView(CheckUsernameMixin, LoginRequiredMixin, DeleteView):
-    model = Agrifield
-    form_class = AgrifieldForm
+    model = models.Agrifield
+    form_class = forms.AgrifieldForm
     template_name = "aira/agrifield_delete/confirm.html"
 
     def get_success_url(self):
-        field = Agrifield.objects.get(pk=self.kwargs["pk"])
+        field = models.Agrifield.objects.get(pk=self.kwargs["pk"])
         return reverse("agrifield-list", kwargs={"username": field.owner})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        afieldobj = Agrifield.objects.get(pk=self.kwargs["pk"])
+        afieldobj = models.Agrifield.objects.get(pk=self.kwargs["pk"])
         afieldobj.can_edit(self.request.user)
         return context
 
 
-class AppliedIrrigationsView(CheckUsernameMixin, LoginRequiredMixin, CreateView):
-    model = AppliedIrrigation
-    form_class = AppliedIrrigationForm
-    template_name_suffix = "/create"
+class TelemetricFlowmeterViewMixin:
+    def set_telemetric_flowmeter_context(self, context):
+        context["telemetric_flowmeter_types"] = []
+        for flowmeter_type in models.TelemetricFlowmeter.TYPES:
+            form = self._get_telemetry_form(flowmeter_type)
+            context["telemetric_flowmeter_types"].append(
+                {"name": flowmeter_type, "form": form, "selected": False}
+            )
+        self._set_selected_flowmeter_type(context)
+
+    def _get_telemetry_form(self, flowmeter_type):
+        form_class = getattr(forms, f"{flowmeter_type}FlowmeterForm")
+        model = getattr(models, f"{flowmeter_type}Flowmeter")
+        instance = model.objects.filter(agrifield=self.agrifield).first()
+        if self._is_flowmeter_submitted_on_post(flowmeter_type):
+            self.selected_flowmeter_type = flowmeter_type
+            return form_class(
+                self.request.POST, instance=instance, prefix=flowmeter_type
+            )
+        else:
+            result = form_class(
+                initial={"agrifield": self.agrifield},
+                instance=instance,
+                prefix=flowmeter_type,
+            )
+            if not hasattr(self, "selected_flowmeter_type") and result.instance.id:
+                self.selected_flowmeter_type = flowmeter_type
+            return result
+
+    def _is_flowmeter_submitted_on_post(self, flowmeter_type):
+        return (
+            self.request.method == "POST"
+            and self.request.POST.get("flowmeter_type") == flowmeter_type
+        )
+
+    def _set_selected_flowmeter_type(self, context):
+        for flowmeter_type in context["telemetric_flowmeter_types"]:
+            if flowmeter_type["name"] == getattr(self, "selected_flowmeter_type", None):
+                flowmeter_type["selected"] = True
+                return
+
+    def _post_process_telemetry(self):
+        flowmeter_type = self.request.POST.get("flowmeter_type")
+        if not flowmeter_type:
+            models.TelemetricFlowmeter.delete_all(self.agrifield)
+            return HttpResponseRedirect(self.get_success_url())
+        telemetry_form = self._get_telemetry_form(flowmeter_type)
+        if telemetry_form.is_valid():
+            if not telemetry_form.instance.id:
+                models.TelemetricFlowmeter.delete_all(self.agrifield)
+            telemetry_form.save()
+            return HttpResponseRedirect(self.get_success_url())
+        return self.get(self.request)
+
+
+class AppliedIrrigationsView(
+    CheckUsernameMixin, LoginRequiredMixin, TemplateView, TelemetricFlowmeterViewMixin
+):
+    template_name = "aira/appliedirrigation/main.html"
+
+    def setup(self, *args, **kwargs):
+        super().setup(*args, **kwargs)
+        self.agrifield = self.get_object(*args, **kwargs)
+
+    def post(self, *args, **kwargs):
+        if "irrigation_type" in self.request.POST:
+            return self._post_add_irrigation()
+        else:
+            return self._post_process_telemetry()
+
+    def _post_add_irrigation(self):
+        self.applied_irrigation_form = forms.AppliedIrrigationForm(self.request.POST)
+        if self.applied_irrigation_form.is_valid():
+            self.applied_irrigation_form.save()
+            return HttpResponseRedirect(self.get_success_url())
+        else:
+            return self.get(self.request)
 
     def get_success_url(self):
-        field = Agrifield.objects.get(pk=self.kwargs.get("agrifield_id"))
-        return reverse("agrifield-list", kwargs={"username": field.owner})
+        return reverse(
+            "applied-irrigations",
+            kwargs={
+                "username": self.agrifield.owner,
+                "agrifield_id": self.agrifield.id,
+            },
+        )
+
+    def _get_applied_irrigation_form(self):
+        try:
+            return self.applied_irrigation_form
+        except AttributeError:
+            return forms.AppliedIrrigationForm(
+                initial={
+                    "agrifield": self.agrifield,
+                    **self.agrifield.get_applied_irrigation_defaults(),
+                },
+            )
 
     def form_valid(self, form):
-        form.instance.agrifield = Agrifield.objects.get(
-            pk=self.kwargs.get("agrifield_id")
+        form.instance.agrifield = models.Agrifield.objects.get(
+            pk=self.kwargs["agrifield_id"]
         )
+        form.instance.is_automatically_reported = False
         return super().form_valid(form)
 
     def dispatch(self, request, *args, **kwargs):
@@ -278,18 +367,18 @@ class AppliedIrrigationsView(CheckUsernameMixin, LoginRequiredMixin, CreateView)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["agrifield"] = self.agrifield
+        context["add_irrigation_form"] = self._get_applied_irrigation_form()
+        self.set_telemetric_flowmeter_context(context)
         return context
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        initial_values = self.agrifield.get_applied_irrigation_defaults()
-        kwargs["initial"] = {**kwargs["initial"], **initial_values}
-        return kwargs
 
 
 class AppliedIrrigationViewMixin:
-    model = AppliedIrrigation
-    form_class = AppliedIrrigationForm
+    model = models.AppliedIrrigation
+    form_class = forms.AppliedIrrigationForm
+
+    def form_valid(self, form):
+        form.instance.is_automatically_reported = False
+        return super().form_valid(form)
 
     def get_object(self):
         applied_irrigation = super().get_object()
@@ -322,11 +411,11 @@ def remove_supervisee_from_user_list(request, username):
     if request.method != "POST" or username != request.user.username:
         raise Http404
     try:
-        supervisee_profile = Profile.objects.get(
+        supervisee_profile = models.Profile.objects.get(
             user_id=int(request.POST.get("supervisee_id")),
             supervisor=request.user,
         )
-    except (TypeError, ValueError, Profile.DoesNotExist):
+    except (TypeError, ValueError, models.Profile.DoesNotExist):
         raise Http404
     supervisee_profile.supervisor = None
     supervisee_profile.save()
@@ -336,7 +425,7 @@ def remove_supervisee_from_user_list(request, username):
 
 
 class SuperviseesView(LoginRequiredMixin, ListView):
-    model = Profile
+    model = models.Profile
     template_name = "aira/supervisees/main.html"
 
     def get_queryset(self):
@@ -347,7 +436,7 @@ class SuperviseesView(LoginRequiredMixin, ListView):
 
 class AgrifieldTimeseriesView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
-        agrifield = get_object_or_404(Agrifield, pk=kwargs.get("agrifield_id"))
+        agrifield = get_object_or_404(models.Agrifield, pk=kwargs.get("agrifield_id"))
         if agrifield.owner.username != self.kwargs["username"]:
             raise Http404
         variable = kwargs.get("variable")

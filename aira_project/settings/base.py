@@ -151,3 +151,6 @@ if os.environ.get("SELENIUM_BROWSER", False):
             "kwargs": {},
         }
     }
+
+AIRA_THE_THINGS_NETWORK_ACCESS_KEY = ""
+AIRA_THE_THINGS_NETWORK_BASE_URL = ""

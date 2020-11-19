@@ -7,8 +7,10 @@
 {% block favicon %}
   <link rel="shortcut icon" type="image/png" href="{% static 'img/aira-logo.png' %}" />
 {% endblock %}
-<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet" media="screen">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.2.0/css/font-awesome.css">
+{% block cssmain %}
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet" media="screen">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.2.0/css/font-awesome.css">
+{% endblock %}
 <link rel="stylesheet" media="screen" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css">
 <link rel="stylesheet" type="text/css" href="{% static 'css/custom.css' %}">
 <link rel="stylesheet" media="screen" href="//cdnjs.cloudflare.com/ajax/libs/smalot-bootstrap-datetimepicker/2.4.4/css/bootstrap-datetimepicker.min.css">

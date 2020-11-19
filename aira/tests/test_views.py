@@ -23,8 +23,7 @@ from model_mommy import mommy
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 
-from aira import views
-from aira.models import Agrifield, AppliedIrrigation, CropTypeKcStage
+from aira import models, views
 from aira.tests import RandomMediaRootMixin
 from aira.tests.test_agrifield import DataTestCase, SetupTestDataMixin
 
@@ -117,7 +116,7 @@ class SupervisedAgrifieldDetailLinksTestCase(DataTestCase):
         cls.supervisor = User.objects.create_user(username="john", password="topsecret")
         cls.user.profile.supervisor = cls.supervisor
         cls.user.profile.save()
-        AppliedIrrigation.objects.all().delete()
+        models.AppliedIrrigation.objects.all().delete()
 
     @classmethod
     def setUpClass(self):
@@ -183,7 +182,7 @@ class UpdateAgrifieldViewTestCase(WrongUsernameTestMixin, DataTestCase):
 
     @classmethod
     def _create_crop_type_kc_stages(cls):
-        c = CropTypeKcStage.objects.create
+        c = models.CropTypeKcStage.objects.create
         c(crop_type=cls.crop_type, order=1, ndays=32, kc_end=0.6)
         c(crop_type=cls.crop_type, order=2, ndays=42, kc_end=0.95)
 
@@ -376,7 +375,7 @@ class AgrifieldTimeseriesViewTestCase(WrongUsernameTestMixin, TestCase):
 
     def _create_agrifield(self):
         self.agrifield = mommy.make(
-            Agrifield, name="hello", location=Point(23, 38), owner=self.alice
+            models.Agrifield, name="hello", location=Point(23, 38), owner=self.alice
         )
 
     def _login(self):
@@ -429,7 +428,7 @@ class DownloadSoilAnalysisViewTestCase(
         self.alice = User.objects.create_user(
             id=54, username="alice", password="topsecret"
         )
-        self.agrifield = mommy.make(Agrifield, id=1, owner=self.alice)
+        self.agrifield = mommy.make(models.Agrifield, id=1, owner=self.alice)
         self.agrifield.soil_analysis.save("somefile", ContentFile("hello world"))
         self.client.login(username="alice", password="topsecret")
         self.response = self.client.get("/alice/fields/1/soil_analysis/")
@@ -541,7 +540,7 @@ class AgrifieldReportViewTestCase(WrongUsernameTestMixin, DataTestCase):
     def test_response_contains_last_irrigation_with_specified_applied_water(self):
         tz = pytz.timezone(settings.TIME_ZONE)
         mommy.make(
-            AppliedIrrigation,
+            models.AppliedIrrigation,
             agrifield=self.agrifield,
             timestamp=tz.localize(dt.datetime(2019, 9, 11, 17, 23)),
             supplied_water_volume=100.5,
@@ -555,7 +554,7 @@ class AgrifieldReportViewTestCase(WrongUsernameTestMixin, DataTestCase):
     def test_response_contains_last_irrigation_with_unspecified_applied_water(self):
         tz = pytz.timezone(settings.TIME_ZONE)
         mommy.make(
-            AppliedIrrigation,
+            models.AppliedIrrigation,
             agrifield=self.agrifield,
             timestamp=tz.localize(dt.datetime(2019, 9, 11, 17, 23)),
             supplied_water_volume=None,
@@ -726,7 +725,7 @@ class LastIrrigationOutsidePeriodWarningTestCase(DataTestCase):
     def _create_applied_irrigation(self):
         tz = pytz.timezone(settings.TIME_ZONE)
         mommy.make(
-            AppliedIrrigation,
+            models.AppliedIrrigation,
             agrifield=self.agrifield,
             timestamp=tz.localize(dt.datetime(2019, 10, 25, 6, 30)),
             supplied_water_volume=58,
@@ -939,7 +938,7 @@ class AppliedIrrigationsViewTestCase(WrongUsernameTestMixin, TestCase):
     def setUp(self):
         owner = User.objects.create_user(username="bob", password="topsecret")
         self.client.login(username="bob", password="topsecret")
-        self.agrifield = mommy.make(Agrifield, owner=owner)
+        self.agrifield = mommy.make(models.Agrifield, owner=owner)
 
     @patch("aira.models.Agrifield.get_applied_irrigation_defaults")
     def test_applied_irrigation_defaults(self, mock):
@@ -950,9 +949,21 @@ class AppliedIrrigationsViewTestCase(WrongUsernameTestMixin, TestCase):
         response = self.client.get(
             f"/bob/fields/{self.agrifield.id}/appliedirrigations/"
         )
-        initials = response.context["form"].initial
+        initials = response.context["add_irrigation_form"].initial
         self.assertEqual(initials["supplied_water_volume"], 1337)
         self.assertEqual(initials["irrigation_type"], "HELLO_WORLD")
+
+    def test_submit_form(self):
+        response = self.client.post(
+            f"/bob/fields/{self.agrifield.id}/appliedirrigations/",
+            data={
+                "agrifield": self.agrifield.id,
+                "irrigation_type": "VOLUME_OF_WATER",
+                "timestamp": "2020-11-10 13:00",
+                "supplied_water_volume": "50.0",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
 
 
 class AppliedIrrigationWrongAgrifieldTestMixin:
@@ -974,10 +985,10 @@ class AppliedIrrigationWrongAgrifieldTestMixin:
     @classmethod
     def setUpTestData(cls):
         owner = User.objects.create_user(username="bob", password="topsecret")
-        cls.agrifield = mommy.make(Agrifield, owner=owner)
-        cls.agrifield2 = mommy.make(Agrifield, owner=owner)
+        cls.agrifield = mommy.make(models.Agrifield, owner=owner)
+        cls.agrifield2 = mommy.make(models.Agrifield, owner=owner)
         cls.applied_irrigation = mommy.make(
-            AppliedIrrigation, agrifield=cls.agrifield, id=101
+            models.AppliedIrrigation, agrifield=cls.agrifield, id=101
         )
 
     def test_wrong_agrifield_results_in_404(self):
@@ -1021,7 +1032,7 @@ class SupervisedAgrifieldAppliedIrrigationLinksTestCase(DataTestCase):
         cls.user.profile.supervisor = cls.supervisor
         cls.user.profile.save()
         cls.applied_irrigation = mommy.make(
-            AppliedIrrigation, agrifield=cls.agrifield, id=101
+            models.AppliedIrrigation, agrifield=cls.agrifield, id=101
         )
 
     @classmethod
@@ -1049,7 +1060,7 @@ class SupervisedAgrifieldAppliedIrrigationEditLinksTestCase(DataTestCase):
         cls.user.profile.supervisor = cls.supervisor
         cls.user.profile.save()
         cls.applied_irrigation = mommy.make(
-            AppliedIrrigation, agrifield=cls.agrifield, id=101
+            models.AppliedIrrigation, agrifield=cls.agrifield, id=101
         )
 
     @classmethod
@@ -1260,3 +1271,57 @@ class AgrifieldsMapPopupTestCase(SeleniumDataTestCase):
         self.map_marker.click()
         self.popup_element.wait_until_exists()
         self.assertTrue(self.popup_element.is_displayed())
+
+
+class TelemetricFlowmeterViewMixinTestCase(TestCase):
+    def setUp(self):
+        self.alice = User.objects.create_user(username="alice", password="topsecret")
+        self.bob = User.objects.create_user(username="bob", password="topsecret")
+        self.agrifield = mommy.make(models.Agrifield, id=1337, owner=self.bob)
+        mommy.make(models.Agrifield, id=1338, owner=self.alice)
+        self.client.login(username="bob", password="topsecret")
+        self.post_data = {
+            "LoRA_ARTA-agrifield": 1337,
+            "flowmeter_type": "LoRA_ARTA",
+            "LoRA_ARTA-device_id": "123",
+            "LoRA_ARTA-flowmeter_water_percentage": 50,
+            "LoRA_ARTA-conversion_rate": 8,
+            "LoRA_ARTA-report_frequency_in_minutes": 15,
+        }
+
+    def test_create_flowmeter(self):
+        self.assertFalse(hasattr(self.agrifield, "lora_artaflowmeter"))
+        response = self.client.post(
+            "/bob/fields/1337/appliedirrigations/", data=self.post_data
+        )
+        self.assertEqual(response.status_code, 302)
+        agrifield = models.Agrifield.objects.get(id=self.agrifield.id)
+        self.assertTrue(hasattr(agrifield, "lora_artaflowmeter"))
+
+        created_flowmeter = agrifield.lora_artaflowmeter
+        self.assertEqual(created_flowmeter.device_id, "123"),
+        self.assertEqual(created_flowmeter.flowmeter_water_percentage, 50),
+        self.assertEqual(created_flowmeter.conversion_rate, 8),
+        self.assertEqual(created_flowmeter.report_frequency_in_minutes, 15),
+
+    def test_create_flowmeter_non_existing_agrifield(self):
+        response = self.client.post(
+            "/bob/fields/7654/appliedirrigations/", data=self.post_data
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_create_flowmeter_non_owned_agrifield(self):
+        response = self.client.post(
+            "/alice/fields/1338/appliedirrigations/", data=self.post_data
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_flowmeter(self):
+        mommy.make(models.LoRA_ARTAFlowmeter, agrifield=self.agrifield)
+        response = self.client.post(
+            "/bob/fields/1337/appliedirrigations/", data={"flowmeter_type": ""}
+        )
+        assert response.status_code == 302
+        self.assertFalse(
+            models.LoRA_ARTAFlowmeter.objects.filter(agrifield=self.agrifield).exists()
+        )

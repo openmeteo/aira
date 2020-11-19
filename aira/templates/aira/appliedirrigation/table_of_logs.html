@@ -1,30 +1,35 @@
 {% load i18n %}
 
-<div class="table-responsive">
-  <table class="table">
-    <h4>{% trans "List of irrigations" %}</h4>
-    <hr>
-    <thead>
-      <tr>
-        <th></th>
-        <th>{% trans "Date" %}</th>
-        <th>{% trans "Applied water" %} (m³)</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for applied_irrigation in agrifield.appliedirrigation_set.all  %}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    {% trans "List of irrigations" %}
+  </div>
+  <div class="panel-body table-responsive">
+    <table class="table">
+      <thead>
         <tr>
-          <td>{{ applied_irrigation.id }}</td>
-          <td><a id="link-update-applied-irrigation-{{ applied_irrigation.id }}" href="{% url 'applied-irrigation-update' agrifield.owner.username agrifield.id applied_irrigation.id %}">{{applied_irrigation.timestamp}}</a></td>
-          <td align="center">{{applied_irrigation.volume|floatformat:"2"}}</td>
-          {% if user.username != "demo" %}
-            <td><a id="link-delete-applied-irrigation-{{ applied_irrigation.id }}" href="{% url 'applied-irrigation-delete' agrifield.owner.username agrifield.id applied_irrigation.id %}">{% trans "Delete" %} </a></td>
-          {% else %}
-            <td -</td>
-          {% endif %}
+          <th></th>
+          <th>{% trans "Date" %}</th>
+          <th>{% trans "Applied water" %} (m³)</th>
+          <th>{% trans "Automatically measured" %}</th>
+          <th></th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for applied_irrigation in agrifield.appliedirrigation_set.all  %}
+          <tr>
+            <td>{{ applied_irrigation.id }}</td>
+            <td><a id="link-update-applied-irrigation-{{ applied_irrigation.id }}" href="{% url 'applied-irrigation-update' agrifield.owner.username agrifield.id applied_irrigation.id %}">{{applied_irrigation.timestamp}}</a></td>
+            <td align="center">{{applied_irrigation.volume|floatformat:"2"}}</td>
+            <td align="center"> {{ applied_irrigation.is_automatically_reported|yesno:"✔,✘" }} </td>
+            {% if user.username != "demo" %}
+              <td><a id="link-delete-applied-irrigation-{{ applied_irrigation.id }}" href="{% url 'applied-irrigation-delete' agrifield.owner.username agrifield.id applied_irrigation.id %}">{% trans "Delete" %} </a></td>
+            {% else %}
+              <td></td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
