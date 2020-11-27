@@ -7,7 +7,7 @@ aira.agrifieldEditDocumentReady = () => {
   };
 
   /* The following should be set directly in the HTML, with the "step"
-     * attribute. However, we are generating this through django-bootstrap3's
+     * attribute. However, we are generating this through django-bootstrap4's
      * {% bootstrap_field %}; it isn't clear if and how this can be configured.
      */
   document.getElementById('id_custom_efficiency').step = 0.05;
@@ -21,15 +21,9 @@ aira.agrifieldEditDocumentReady = () => {
 };
 
 aira.setupDateTimePickerForAppliedIrrigation = () => {
-  const adate = new Date();
-  adate.setMinutes(0, 0, 0);
-  $('#id_timestamp').datetimepicker({
-    format: 'yyyy-mm-dd hh:ii',
-    autoclose: true,
-    todayBtn: true,
-    pickerPosition: 'bottom-left',
-    minView: 1,
-    initialDate: adate,
+  $('#datetimepicker1').datetimepicker({
+    format: 'YYYY-MM-DD HH:00',
+    sideBySide: true,
   });
 };
 
@@ -192,16 +186,12 @@ aira.meteoMapPanel = {
   },
 
   setupDateTimePicker() {
-    $('#date-input').datetimepicker('remove');
-    $('#date-input').datetimepicker({
-      startDate: aira.start_date,
-      initialDate: aira.end_date,
-      endDate: aira.end_date,
-      autoclose: true,
-      pickerPosition: 'bottom-left',
-      format: this.dateFormat.toLowerCase(),
-      minView: this.activeTimestep === 'daily' ? 'month' : 'year',
-      startView: this.activeTimestep === 'daily' ? 'month' : 'year',
+    $('#datetimepicker1').datetimepicker('destroy');
+    $('#datetimepicker1').datetimepicker({
+      format: this.dateFormat,
+      minDate: aira.start_date,
+      defaultDate: aira.end_date,
+      maxDate: aira.end_date,
     });
   },
 

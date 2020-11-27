@@ -403,6 +403,23 @@ class LastIrrigationIsOutdatedTestCase(DataTestCase):
         self.assertFalse(self.agrifield.last_irrigation_is_outdated)
 
 
+@override_settings(CACHES={"default": {"BACKEND": _locmemcache}})
+class SetStatusTestCase(DataTestCase):
+    def setUp(self):
+        cache_key = f"agrifield_{self.agrifield.id}_status"
+        cache.delete(cache_key)
+
+    @patch(_in_covered_area, new_callable=PropertyMock, return_value=True)
+    def test_saving_puts_it_in_queued_status_if_in_covered_area(self, m):
+        self.agrifield.save()
+        self.assertEqual(self.agrifield.status, "queued")
+
+    @patch(_in_covered_area, new_callable=PropertyMock, return_value=False)
+    def test_saving_removes_status_if_not_in_covered_area(self, m):
+        self.agrifield.save()
+        self.assertEqual(self.agrifield.status, "done")
+
+
 @override_settings(TIME_ZONE="Europe/Athens")
 @patch(_in_covered_area, new_callable=PropertyMock, return_value=True)
 class AppliedIrrigationTimeZoneTestCase(DataTestCase):

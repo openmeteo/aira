@@ -1,15 +1,15 @@
 {% load i18n %}
 
-<div class="panel panel-default">
-  <div class="panel-heading">
+<div class="card">
+  <div class="card-header">
     <b>{% trans "Irrigation water units conversion" %}</b>
   </div>
-  <div class="panel-body">
+  <div class="card-body">
     <div class="row">
-      <div class="col-md-6">
+      <div class="col-md">
         {% include "aira/tools/mm_to_m3.html" %}
       </div>
-      <div class="col-md-6">
+      <div class="col-md">
         {% include "aira/tools/m3_to_mm.html" %}
       </div>
     </div>

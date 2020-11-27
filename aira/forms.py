@@ -119,12 +119,16 @@ class AgrifieldForm(forms.ModelForm):
 
     def clean_kc_stages(self):
         data = self.cleaned_data["kc_stages"]
+        result = ""
         for i, row in enumerate(StringIO(data)):
             row = row.replace("\t", " ")
             try:
                 items = row.split()
-                int(items[0])
-                float(items[1].replace(",", "."))
+                ndays = int(items[0])
+                kc_end = float(items[1].replace(",", "."))
+                if result:
+                    result += "\n"
+                result += f"{ndays} {kc_end}"
             except (ValueError, IndexError):
                 raise forms.ValidationError(
                     _(
@@ -132,7 +136,7 @@ class AgrifieldForm(forms.ModelForm):
                         "(ndays, kc_end) pair"
                     )
                 )
-        return data
+        return result
 
     def clean_is_virtual(self):
         result = self.cleaned_data.get("is_virtual")
@@ -190,7 +194,7 @@ class AppliedIrrigationForm(forms.ModelForm):
                 "flowmeter_water_percentage",
             ]
             self._validate_required(fields)
-        return super().clean()
+        return cleaned_data
 
     def _validate_required(self, fields=[]):
         # Used to require fields dynamically (depending on other submitted values)

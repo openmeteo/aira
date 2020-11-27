@@ -153,31 +153,37 @@ class AgrifieldFormCleanKcStagesTestCase(TestCase):
         self.post_data["kc_stages"] = "15\t0.9"
         form = AgrifieldForm(self.post_data, instance=self.agrifield)
         self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["kc_stages"], "15 0.9")
 
     def test_validates_when_correct_data_with_spaces_and_tabs(self):
         self.post_data["kc_stages"] = "15\t0.9\n25 0.8"
         form = AgrifieldForm(self.post_data, instance=self.agrifield)
         self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["kc_stages"], "15 0.9\n25 0.8")
 
     def test_validates_when_correct_data_with_many_spaces(self):
         self.post_data["kc_stages"] = "15\t\t0.9\n25  0.8"
         form = AgrifieldForm(self.post_data, instance=self.agrifield)
         self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["kc_stages"], "15 0.9\n25 0.8")
 
     def test_validates_when_leading_and_trailing_spaces(self):
         self.post_data["kc_stages"] = "   15 0.9\t\t\t\n\t\t25 0.8   "
         form = AgrifieldForm(self.post_data, instance=self.agrifield)
         self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["kc_stages"], "15 0.9\n25 0.8")
 
     def test_validates_when_leading_and_trailing_newlines(self):
         self.post_data["kc_stages"] = "\n\n15 0.9\n25 0.8\n\n"
         form = AgrifieldForm(self.post_data, instance=self.agrifield)
         self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["kc_stages"], "15 0.9\n25 0.8")
 
     def test_validates_when_correct_data_with_comma_as_decimal_delimiter(self):
         self.post_data["kc_stages"] = "15 0,9\n25 0,8"
         form = AgrifieldForm(self.post_data, instance=self.agrifield)
         self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["kc_stages"], "15 0.9\n25 0.8")
 
 
 class AgrifieldFormInitializeTestCase(TestCase):

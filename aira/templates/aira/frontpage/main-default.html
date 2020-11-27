@@ -1,5 +1,5 @@
 {% extends 'aira/base/main.html' %}
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 {% load i18n %}
 {% load static %}
 
@@ -8,14 +8,14 @@
 
 
 {% block main_page %}
-  <div class="panel panel-default">
-    <div class="panel-heading">
+  <div class="card">
+    <div class="card-header">
       {% include "aira/frontpage/map_heading.html" %}
     </div>
-    <div class="panel-body">
+    <div class="card-body">
       {% include "aira/frontpage/map_main.html" %}
     </div>
-    <div class="panel-footer">
+    <div class="card-footer">
       {% block map_footer %}
       {% endblock %}
     </div>

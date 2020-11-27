@@ -3,7 +3,7 @@
 {% load i18n %}
 {% load l10n %}
 
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 {% block title %} {{ object.name}} {% endblock %}
 
 {% block content  %}
@@ -29,6 +29,11 @@
   <script src="//code.highcharts.com/highcharts.js" type="text/javascript"></script>
   <script src="//code.highcharts.com/modules/exporting.js" type="text/javascript"></script>
   <script type="text/javascript">
+    chartWidth = document.querySelector('#irrchart').clientWidth;
+    timeseriesLength = {{ object.results.timeseries.index|length }};
+    barWidth = Math.floor(chartWidth / (3 * timeseriesLength));
+    barWidth = Math.min(barWidth, 5);
+    barWidth = Math.max(barWidth, 1);
     Highcharts.chart('irrchart', {
       chart: {type: 'column'},
       credits: {enabled: false},
@@ -58,7 +63,7 @@
         shared: true,
         useHTML: true
       },
-      plotOptions: {column: {pointPadding: 0.2, borderWidth: 5}},
+      plotOptions: {column: {pointPadding: 0.2, borderWidth: barWidth}},
       series: [{
         "name": "{% trans 'Estimated irrigation water amount' %}",
         "color": '#008000',

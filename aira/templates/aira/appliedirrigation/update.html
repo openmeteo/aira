@@ -1,28 +1,42 @@
 {% extends 'aira/base/main.html' %}
 {% load i18n %}
 
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 {% block title %} {{ user }} {% endblock %}
 
 {% block content %}
   <div class="container">
-    <div class="row">
-      <div class="col-lg-12">
-        <h3>{% trans "Update irrigation" %} </h3>
-        <hr>
-        <form method="post" role="form" class="form-horizontal">
-          {% csrf_token %}
-          {% bootstrap_form form layout='horizontal' %}
-          {% buttons %}
-            {% if user.username != "demo" %}
-              <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-success btn-xs">{% trans "Update" %}</button>
-                <a id="btn-back" class="btn btn-success btn-xs" href="{% url 'applied-irrigations' object.agrifield.owner.username object.agrifield.id %}"> {% trans "Back" %} </a>
-              </div>
-            {% endif %}
-          {% endbuttons %}
-        </form>
+    <h3>{% trans "Update irrigation" %} </h3>
+    <hr>
+    <form method="post" role="form" class="form-horizontal">
+      {% csrf_token %}
+
+      {% bootstrap_field form.agrifield %}
+      {% bootstrap_field form.irrigation_type %}
+      <div id="datetimepicker1" class="input-group date mb-3" data-target-input="nearest">
+        <input type="text" name="timestamp" class="form-control datetimepicker-input"
+          data-target="#datetimepicker1"
+          required="" id="id_timestamp"
+          value="{{ form.timestamp.value.isoformat }}"
+        >
+        <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+          <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+        </div>
       </div>
+      {% bootstrap_field form.supplied_water_volume %}
+      {% bootstrap_field form.supplied_duration %}
+      {% bootstrap_field form.supplied_flow_rate %}
+      {% bootstrap_field form.flowmeter_reading_start %}
+      {% bootstrap_field form.flowmeter_reading_end %}
+      {% bootstrap_field form.flowmeter_water_percentage %}
+
+      {% buttons %}
+        {% if user.username != "demo" %}
+          <button type="submit" class="btn btn-success btn-xs">{% trans "Update" %}</button>
+          <a id="btn-back" class="btn btn-success btn-xs" href="{% url 'applied-irrigations' object.agrifield.owner.username object.agrifield.id %}"> {% trans "Back" %} </a>
+        {% endif %}
+      {% endbuttons %}
+    </form>
   </div>
 {% endblock %}
 

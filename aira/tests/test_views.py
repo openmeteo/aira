@@ -781,9 +781,8 @@ class DateChangingTestCase(SeleniumTestCase):
     next_date_button = PageElement(By.ID, "next-date")
     current_date_element = PageElement(By.ID, "current-date")
     date_input_element = PageElement(By.ID, "date-input")
-    datetimepicker_2 = PageElement(
-        By.XPATH, '//div[@class="datetimepicker-days"]//td[text()="2"]'
-    )
+    calendar_icon_element = PageElement(By.ID, "calendar-icon")
+    datetimepicker_2 = PageElement(By.XPATH, '//td[@class="day"][text()="2"]')
 
     def _check_button_values(self, previous, current, next):
         self.assertEqual(self.current_date_element.text, current)
@@ -829,8 +828,8 @@ class DateChangingTestCase(SeleniumTestCase):
         self.next_date_button.wait_until_exists()
         self._check_button_values("2019-01-02", "2019-01-03", None)
 
-        self.date_input_element.wait_until_exists()
-        self.date_input_element.click()
+        self.calendar_icon_element.wait_until_exists()
+        self.calendar_icon_element.click()
         self.datetimepicker_2.wait_until_exists()
         self.datetimepicker_2.click()
         sleep(0.1)

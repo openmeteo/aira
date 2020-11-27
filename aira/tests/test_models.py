@@ -8,7 +8,6 @@ from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.core.files.base import ContentFile
 from django.db import IntegrityError
-from django.http.response import Http404
 from django.test import TestCase, override_settings
 
 from model_mommy import mommy
@@ -92,14 +91,6 @@ class AgrifieldTestCase(AgrifieldTestCaseBase):
     def test_agrifield_delete(self):
         self.agrifield.delete()
         self.assertEqual(models.Agrifield.objects.all().count(), 0)
-
-    def test_valid_user_can_edit(self):
-        self.assertTrue(self.agrifield.can_edit(self.user))
-
-    def test_invalid_user_cannot_edit(self):
-        user = User.objects.create_user(id=56, username="charlie", password="topsecret")
-        with self.assertRaises(Http404):
-            self.agrifield.can_edit(user)
 
     def test_agrifield_irrigation_optimizer_default_value(self):
         self.assertEqual(self.agrifield.irrigation_optimizer, 0.5)
@@ -294,7 +285,7 @@ class AgrifieldLatestAppliedIrrigationDefaultsTestCase(TestCase):
 class AgrifieldCustomKcStagesTestCase(TestCase):
     def setUp(self):
         self.agrifield = mommy.make(models.Agrifield)
-        csv = "15,0.9\n25\t0.8"
+        csv = "15 0.9\n25 0.8"
         self.agrifield.set_custom_kc_stages(csv)
 
     def test_set_custom_kc_stages(self):

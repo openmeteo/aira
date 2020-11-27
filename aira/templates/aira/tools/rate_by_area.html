@@ -1,32 +1,46 @@
 {% load i18n %}
 
 <div class="input-group">
-  <span class="input-group-addon">{% trans "Area" %}</span>
+  <div class="input-group-prepend">
+    <span class="input-group-text">{% trans "Area" %}</span>
+  </div>
   {% verbatim %}
     <input type="number" ng-model="area" class="form-control" >
   {% endverbatim %}
-  <span class="input-group-addon">m²</span>
+  <div class="input-group-append">
+    <span class="input-group-text">m²</span>
+  </div>
 </div>
 <br>
 <div class="input-group">
-  <span class="input-group-addon">{% trans "Irrigation water amount" %}</span>
+  <div class="input-group-prepend">
+    <span class="input-group-text">{% trans "Irrigation water amount" %}</span>
+  </div>
   {% verbatim %}
     <input type="number" ng-model="irriwatermm" class="form-control" >
   {% endverbatim %}
-  <span class="input-group-addon">mm</span>
+  <div class="input-group-append">
+    <span class="input-group-text">mm</span>
+  </div>
 </div>
 <br>
 <div class="input-group">
-  <span class="input-group-addon">{% trans "Desired irrigation duration" %}</span>
+  <div class="input-group-prepend">
+    <span class="input-group-text">{% trans "Desired irrigation duration" %}</span>
+  </div>
   {% verbatim %}
     <input type="number" ng-model="desired_dur" ng-init="desired_dur=12" class="form-control">
   {% endverbatim %}
-  <span class="input-group-addon"> h</span>
+  <div class="input-group-append">
+    <span class="input-group-text"> h</span>
+  </div>
 </div>
 <br>
-<div class="well well-sm" >
-  {% verbatim %}
-    = {{ irriwatermm/1000 * (area/desired_dur)| number:1}} m³ / h
-   <span ng-model='irrigation_duration'>
-  {% endverbatim %}
+<div class="card bg-light" >
+  <div class="card-body">
+    {% verbatim %}
+      = {{ irriwatermm/1000 * (area/desired_dur)| number:1}} m³ / h
+    <span ng-model='irrigation_duration'>
+    {% endverbatim %}
+  </div>
 </div>

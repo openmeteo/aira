@@ -1,26 +1,23 @@
 {% extends 'aira/base/main.html' %}
 {% load i18n %}
 
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 
 {% block title %} {{ user }} {% endblock %}
 
 {% block content %}
   <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <h3>
-          {% blocktrans with name=object.name %}
-            Are you sure you want to delete field <mark>{{ name }}</mark>?
-          {% endblocktrans %}
-        </h3>
-        <br>
-        <form method="post" role="form" class="form-horizontal">
-          {% csrf_token %}
-          {% buttons %}
-            <button type="submit" class="btn btn-danger">{% trans "Delete" %}</button>
-          {% endbuttons %}
-        </form>
-    </div>
+    <h3>
+      {% blocktrans with name=object.name %}
+        Are you sure you want to delete field <mark>{{ name }}</mark>?
+      {% endblocktrans %}
+    </h3>
+    <br>
+    <form method="post" role="form" class="form-horizontal">
+      {% csrf_token %}
+      {% buttons %}
+        <button type="submit" class="btn btn-danger">{% trans "Delete" %}</button>
+      {% endbuttons %}
+    </form>
   </div>
 {% endblock %}

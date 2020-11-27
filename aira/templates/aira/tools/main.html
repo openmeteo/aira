@@ -1,20 +1,18 @@
 {% extends 'aira/base/main.html' %}
 {% load i18n %}
 {% load static %}
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 
 
 {% block title %}{% trans "Conversion tools" %} {% endblock %}
 
 
 {% block content %}
-  <div class="row">
-    <div ng-app class="container">
-      <h3>{% trans "Conversion tools" %} </h3>
-      <br>
-      {% include "aira/tools/mm.html" %}
-      {% include "aira/tools/duration.html" %}
-      {% include "aira/tools/rate.html" %}
-    </div>
+  <div ng-app class="container">
+    <h3>{% trans "Conversion tools" %} </h3>
+    <br>
+    {% include "aira/tools/mm.html" %}
+    {% include "aira/tools/duration.html" %}
+    {% include "aira/tools/rate.html" %}
   </div>
 {% endblock %}

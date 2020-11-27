@@ -1,19 +1,15 @@
+<div id="map" class="map"></div>
+<p class="text-center">Click on the map to show values</p>
 <div class="row">
-  <div id="map" class="map"></div>
-</div>
-<div class="row">
-  <p class="text-center">Click on the map to show values</p>
-</div>
-<div class="row">
-  <div class="col-xs-4 text-left">
-    <button id="previous-date" type="button" class="btn btn-xs btn-default" onclick="aira.meteoMapPanel.setMapDate(this.getAttribute('date'))">
+  <div class="col text-left">
+    <button id="previous-date" type="button" class="btn btn-sm btn-secondary" onclick="aira.meteoMapPanel.setMapDate(this.getAttribute('date'))">
     </button>
   </div>
-  <div class="col-xs-4 text-center">
-    <button id="current-date" class="btn btn-xs btn-default"></button>
+  <div class="col text-center">
+    <button id="current-date" class="btn btn-sm btn-secondary"></button>
   </div>
-  <div class="col-xs-4 text-right">
-    <button id="next-date" type="button" class="btn btn-xs btn-default" onclick="aira.meteoMapPanel.setMapDate(this.getAttribute('date'))">
+  <div class="col text-right">
+    <button id="next-date" type="button" class="btn btn-sm btn-secondary ml-auto" onclick="aira.meteoMapPanel.setMapDate(this.getAttribute('date'))">
     </button>
   </div>
 </div>

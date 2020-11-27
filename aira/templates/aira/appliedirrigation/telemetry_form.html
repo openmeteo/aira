@@ -1,11 +1,11 @@
 {% load i18n %}
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 
-<div class="panel panel-default">
-  <div class="panel-heading">
+<div class="card mt-3 mb-3">
+  <div class="card-header">
     {% trans "Telemetry" %}
   </div>
-  <div class="panel-body">
+  <div class="card-body">
     <form method="post" role="form" id="{{ flowmeter_type.value }}-form">
       {% csrf_token %}
       {% include "./flowmeter_type_dropdown.html" %}

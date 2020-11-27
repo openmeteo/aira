@@ -1,24 +1,34 @@
 {% load i18n %}
 
-<h4> m³ <i class="glyphicon glyphicon-arrow-right"></i> mm </h4>
+<h4> m³ <i class="fa fa-arrow-right"></i> mm </h4>
 <div class="input-group">
-  <span class="input-group-addon">{% trans "Area" %}</span>
+  <div class="input-group-prepend">
+    <span class="input-group-text">{% trans "Area" %}</span>
+  </div>
   {% verbatim %}
     <input type="number" min='0' ng-model="area" class="form-control" >
   {% endverbatim %}
-  <span class="input-group-addon">m²</span>
+  <div class="input-group-append">
+    <span class="input-group-text">m²</span>
+  </div>
 </div>
 <br>
 <div class="input-group">
-  <span class="input-group-addon">{% trans "Irrigation water amount" %}</span>
+  <div class="input-group-prepend">
+    <span class="input-group-text">{% trans "Irrigation water amount" %}</span>
+  </div>
   {% verbatim %}
     <input type="number" min='0' ng-model="irriwaterm3" ng-init="irriwaterm3=30" class="form-control" >
   {% endverbatim %}
-  <span class="input-group-addon">m³</span>
+  <div class="input-group-append">
+    <span class="input-group-text">m³</span>
+  </div>
 </div>
 <br>
-<div class="well well-sm">
-  {% verbatim %}
-    = {{ irriwaterm3/area * 1000|number:1 }} mm
-  {% endverbatim %}
+<div class="card bg-light">
+  <div class="card-body">
+    {% verbatim %}
+      = {{ irriwaterm3/area * 1000|number:1 }} mm
+    {% endverbatim %}
+  </div>
 </div>
