@@ -1,7 +1,6 @@
 from django.urls import path
-from django.views.generic import RedirectView
 
-from aira import obsolete_redirected_views, views
+from aira import views
 
 urlpatterns = [
     path("", views.FrontPageView.as_view(), name="frontpage"),
@@ -79,61 +78,3 @@ urlpatterns = [
     path("conversion_tools/", views.ConversionToolsView.as_view(), name="tools"),
     path("try/", views.DemoView.as_view(), name="try"),
 ]
-
-redirections_of_old_urls = [
-    path(
-        "home/<str:username>/",
-        RedirectView.as_view(permanent=True, pattern_name="agrifield-list"),
-    ),
-    path("home/", RedirectView.as_view(permanent=True, pattern_name="my_fields")),
-    path(
-        "advice/<int:pk>/",
-        obsolete_redirected_views.RecommendationRedirectView.as_view(),
-    ),
-    path(
-        "recommendation/<int:pk>/",
-        obsolete_redirected_views.RecommendationRedirectView.as_view(),
-    ),
-    path(
-        "create_agrifield/<str:username>/",
-        RedirectView.as_view(permanent=True, pattern_name="agrifield-create"),
-    ),
-    path(
-        "update_agrifield/<int:pk>/",
-        obsolete_redirected_views.UpdateAgrifieldRedirectView.as_view(),
-    ),
-    path(
-        "delete_agrifield/<int:pk>/",
-        obsolete_redirected_views.DeleteAgrifieldRedirectView.as_view(),
-    ),
-    path(
-        "agrifield/<int:agrifield_id>/timeseries/<str:variable>/",
-        obsolete_redirected_views.AgrifieldTimeseriesRedirectView.as_view(),
-    ),
-    path(
-        "agrifield/<int:agrifield_id>/soil_analysis/",
-        obsolete_redirected_views.DownloadSoilAnalysisRedirectView.as_view(),
-    ),
-    path(
-        "create_irrigationlog/<int:pk>/",
-        obsolete_redirected_views.AppliedIrrigationsRedirectView.as_view(),
-    ),
-    path(
-        "update_irrigationlog/<int:pk>/",
-        obsolete_redirected_views.AppliedIrrigationEditRedirectView.as_view(),
-    ),
-    path(
-        "delete_irrigationlog/<int:pk>/",
-        obsolete_redirected_views.AppliedIrrigationDeleteRedirectView.as_view(),
-    ),
-    path(
-        "irrigation-performance-chart/<int:pk>/",
-        obsolete_redirected_views.IrrigationPerformanceRedirectView.as_view(),
-    ),
-    path(
-        "download-irrigation-performance/<int:pk>/",
-        obsolete_redirected_views.IrrigationPerformanceDownloadRedirectView.as_view(),
-    ),
-]
-
-urlpatterns.extend(redirections_of_old_urls)

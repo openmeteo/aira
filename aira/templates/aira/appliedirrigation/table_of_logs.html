@@ -1,24 +1,22 @@
 {% load i18n %}
 
-<div class="panel panel-default">
-  <div class="panel-heading">
+<div class="card">
+  <div class="card-header">
     {% trans "List of irrigations" %}
   </div>
-  <div class="panel-body table-responsive">
+  <div class="card-body table-responsive">
     <table class="table">
       <thead>
         <tr>
-          <th></th>
           <th>{% trans "Date" %}</th>
           <th>{% trans "Applied water" %} (m³)</th>
-          <th>{% trans "Automatically measured" %}</th>
+          <th>{% trans "Auto" %}<a href="#auto-explain">*</a></th>
           <th></th>
         </tr>
       </thead>
       <tbody>
         {% for applied_irrigation in agrifield.appliedirrigation_set.all  %}
           <tr>
-            <td>{{ applied_irrigation.id }}</td>
             <td><a id="link-update-applied-irrigation-{{ applied_irrigation.id }}" href="{% url 'applied-irrigation-update' agrifield.owner.username agrifield.id applied_irrigation.id %}">{{applied_irrigation.timestamp}}</a></td>
             <td align="center">{{applied_irrigation.volume|floatformat:"2"}}</td>
             <td align="center"> {{ applied_irrigation.is_automatically_reported|yesno:"✔,✘" }} </td>
@@ -31,5 +29,7 @@
         {% endfor %}
       </tbody>
     </table>
+    <a id="auto-explain"></a>
+    <p class="text-muted">* {% trans "Indicates whether it has been registered automatically by a telemetric flowmeter" %}</p>
   </div>
 </div>

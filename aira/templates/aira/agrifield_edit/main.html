@@ -3,9 +3,7 @@
 {% load static %}
 
 
-{% block title %}
-  {% include "aira/agrifield_edit/title.html" %}
-{% endblock %}
+{% block title %}{% include "aira/agrifield_edit/title.html" %}{% endblock %}
 
 
 {% block extrahead %}
@@ -14,12 +12,11 @@
 
 
 {% block content %}
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h4>{% include "aira/agrifield_edit/title.html" %}</h4>
-    </div>
-    <div class="panel panel-body">
-      {% include "aira/agrifield_edit/map.html" %}
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">{% include "aira/agrifield_edit/title.html" %}</h4>
+      <div id="map" class="map"></div>
+      <p class="text-center text-muted">{% trans "Click on map to specify field location" %}</p>
       {% include "aira/agrifield_edit/form.html" %}
     </div>
   </div>

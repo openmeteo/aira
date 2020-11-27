@@ -1,11 +1,11 @@
 {% load i18n %}
 {% load mathfilters %}
 
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <b>{% trans "Crop type" %}:</b>{{ object.crop_type.name }}
+<div class="card">
+  <div class="card-header">
+    <b>{% trans "Crop type" %}:</b> {{ object.crop_type.name }}
   </div>
-  <div class="panel-body">
+  <div class="card-body">
     <b>{% trans "Estimated root depth (max)" %}:</b> {{ object.root_depth|floatformat:"2" }} m <br>
     <b>{% trans "Maximum allowed depletion" %}:</b> {{ object.p|mul:100|floatformat:"1" }}%<br>
     <b>{% trans "Field capacity" %}:</b> {{ object.field_capacity|mul:100|floatformat:"1"}}%<br>

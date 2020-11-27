@@ -1,14 +1,30 @@
 {% load i18n %}
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 
-<div class="panel panel-default">
-  <div class="panel-heading">
+<div class="card">
+  <div class="card-header">
     {% trans "Add irrigation" %}
   </div>
-  <div class="panel-body">
+  <div class="card-body">
     <form method="post" role="form" class="form">
       {% csrf_token %}
-      {% bootstrap_form add_irrigation_form %}
+      {{ add_irrigation_form.agrifield }}
+      {% bootstrap_field add_irrigation_form.irrigation_type %}
+      <div id="datetimepicker1" class="input-group date mb-3" data-target-input="nearest">
+        <input type="text" name="timestamp" class="form-control datetimepicker-input"
+          data-target="#datetimepicker1" placeholder="{% trans "Date and time (YYYY-MM-DD HH:mm:ss)" %}"
+          required="" id="id_timestamp"
+        >
+        <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+          <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+        </div>
+      </div>
+      {% bootstrap_field add_irrigation_form.supplied_water_volume %}
+      {% bootstrap_field add_irrigation_form.supplied_duration %}
+      {% bootstrap_field add_irrigation_form.supplied_flow_rate %}
+      {% bootstrap_field add_irrigation_form.flowmeter_reading_start %}
+      {% bootstrap_field add_irrigation_form.flowmeter_reading_end %}
+      {% bootstrap_field add_irrigation_form.flowmeter_water_percentage %}
       {% if user.username != "demo" %}
         <input type="submit" class="btn btn-success" value="{% trans "Submit" %}">
       {% endif %}

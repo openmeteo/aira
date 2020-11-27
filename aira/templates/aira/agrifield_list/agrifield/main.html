@@ -1,8 +1,8 @@
 {% load static %}
 {% load i18n %}
 
-<div class="panel panel-default">
-  <div class="panel-body">
+<div class="card mt-3">
+  <div class="card-body">
     {% include "aira/agrifield_list/agrifield/info.html" %}
     {% include "aira/agrifield_list/agrifield/recalculation_warning.html" %}
     {% if not f.in_covered_area %}

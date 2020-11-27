@@ -1,4 +1,3 @@
-import csv
 import datetime as dt
 import math
 import os
@@ -17,7 +16,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Q, UniqueConstraint
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.http import Http404
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
@@ -337,11 +335,6 @@ class Agrifield(models.Model, AgrifieldSWBMixin, AgrifieldSWBResultsMixin):
         except AppliedIrrigation.DoesNotExist:
             return None
 
-    def can_edit(self, user):
-        if (user == self.owner) or (user == self.owner.profile.supervisor):
-            return True
-        raise Http404
-
     class Meta:
         ordering = ("name", "area")
         verbose_name_plural = "Agrifields"
@@ -357,7 +350,10 @@ class Agrifield(models.Model, AgrifieldSWBMixin, AgrifieldSWBResultsMixin):
     def _queue_for_calculation(self):
         from aira import tasks
 
-        cache_key = "agrifield_{}_status".format(self.id)
+        cache_key = f"agrifield_{self.id}_status"
+        if not self.in_covered_area:
+            cache.set(cache_key, "done", None)
+            return
 
         # If the agrifield is already in the Celery queue for calculation,
         # return without doing anything.
@@ -458,14 +454,15 @@ class Agrifield(models.Model, AgrifieldSWBMixin, AgrifieldSWBResultsMixin):
     def set_custom_kc_stages(self, s):
         """Replaces all existing kc stages with ones read from a string.
 
-        The string can be comma-delimited or tab-delimited, or a mix.
+        The string should be space-delimited, using full-stop as the decimal
+        separator.
         """
 
-        s = s.replace("\t", ",")
         self.agrifieldcustomkcstage_set.all().delete()
-        for i, row in enumerate(csv.reader(StringIO(s)), start=1):
-            ndays = int(row[0])
-            kc_end = float(row[1])
+        for i, row in enumerate(StringIO(s), start=1):
+            items = row.split()
+            ndays = int(items[0])
+            kc_end = float(items[1])
             AgrifieldCustomKcStage.objects.create(
                 agrifield=self, order=i, ndays=ndays, kc_end=kc_end
             )

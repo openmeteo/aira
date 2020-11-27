@@ -1,23 +1,30 @@
 {% load i18n %}
 
 <div class="row">
-  <div class="col-md-3">
+  <div class="col-md">
     <p>
       <b>{% trans "Climate data" %}</b><br>
       <sub>{% trans "Time period" %}: <span class="text-success">{{ start_date|date:"Y-m-d" }}</span> : <span class="text-success">{{ end_date|date:"Y-m-d" }}</span></sub>
     <p>
   </div>
-  <div class="col-md-3">
+  <div class="col-md">
     <div style="float: left;" class="form-group">
-      <div class="input-group date" id="date-selector">
-        <input type='text' class="form-control" id="date-input" onchange="aira.meteoMapPanel.setMapDate(this.value)" />
-        <span class="input-group-addon">
-          <span class="glyphicon glyphicon-calendar"></span>
-        </span>
+      <div class="input-group date" id="datetimepicker1" data-target-input="nearest">
+        {% comment %}
+        We should have onchange instead of oninput below, but there's a bug,
+        https://github.com/tempusdominus/bootstrap-3/issues/28
+        {% endcomment %}
+        <input type="text" class="form-control datetimepicker-input" id="date-input"
+          data-target="#datetimepicker1"
+          oninput="aira.meteoMapPanel.setMapDate(this.value)"
+        />
+        <div id="calendar-icon" class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+          <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+        </div>
       </div>
     </div>
   </div>
-  <div class="col-md-3">
+  <div class="col-md">
     <div id="raster-selector-daily" class="form-group">
       <select id="dailyMeteoVar" class="form-control" onchange="aira.meteoMapPanel.updateMeteoLayer()">
         <option value="Daily_rain_">{% trans "Daily rainfall" %} (mm/d)</option>
@@ -36,11 +43,11 @@
       </div>
     </div>
   </div>
-  <div class="col-sm-3">
+  <div class="col-md">
     <a href="#" id="timestep-toggle"
                 current-timestep="daily"
                 onclick="aira.meteoMapPanel.toggleBetweenMonthlyAndDaily()"
-                class="btn btn-primary btn">
+                class="btn btn-primary">
     </a>
   </div>
 </div>

@@ -20,7 +20,7 @@ INSTALLED_APPS = [
     "aira",
     "registration",
     "django.contrib.admin",
-    "bootstrap3",
+    "bootstrap4",
     "mathfilters",
     "captcha",
 ]
@@ -32,6 +32,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "aira.middleware.PermissionsMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -136,6 +137,8 @@ AIRA_DEMO_USER_INITIAL_AGRIFIELDS = [
 AIRA_MAP_DEFAULT_CENTER = (20.98, 39.15)
 AIRA_MAP_DEFAULT_ZOOM = 10
 
+AIRA_EMAIL_HEADER = ""
+AIRA_EMAIL_FOOTER = ""
 
 CELERY_TASK_SERIALIZER = "pickle"
 CELERY_ACCEPT_CONTENT = ["pickle"]

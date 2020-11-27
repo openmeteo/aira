@@ -1,6 +1,6 @@
 {% extends 'aira/base/main.html' %}
 {% load i18n %}
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 
 
 {% block title %}{% trans "Account settings" %}{% endblock %}
@@ -10,33 +10,33 @@
   <form method="post" role="form" >
     {% csrf_token %}
     <div class='row'>
-      <div class='col-sm-5'>
+      <div class='col-lg'>
         <h4 class="lead">{% trans "Update profile" %}</h4>
         <div class='form-group'>
           {% bootstrap_field form.first_name %}
           {% bootstrap_field form.last_name %}
           {% bootstrap_field form.address %}
           {% bootstrap_field form.supervision_question %}
-          {% if user.username != "demo" %}
-            <button type="submit" class="btn  btn-sm btn-primary">{% trans "Update" %}</button>
-            <a class="btn btn-sm btn-primary"href="{% url 'auth_password_reset' %}">{% trans "Reset password" %}</a>
-            <a class="btn btn-sm btn-danger" href="{% url 'delete_user' user.id %}"> {% trans "Delete account" %}</a>
-          {% endif %}
         </div>
       </div>
-      <div class="col-sm-4">
+      <div class="col-lg">
         <h4 class="lead">{% trans "Notification settings" %}</h4>
         <div class="form-group">
           {% bootstrap_field form.notification %}
           {% bootstrap_field form.email_language %}
         </div>
       </div>
-      <div class="col-sm-3">
+      <div class="col-lg">
         <h4 class="lead">{% trans "Supervision" %}</h4>
         <div class="form-group">
           {% bootstrap_field form.supervisor %}
         </div>
       </div>
     </div>
+    {% if user.username != "demo" %}
+      <button type="submit" class="btn btn-primary">{% trans "Update" %}</button>
+      <a class="btn btn-primary"href="{% url 'auth_password_reset' %}">{% trans "Reset password" %}</a>
+      <a class="btn btn-danger" href="{% url 'delete_user' user.id %}"> {% trans "Delete account" %}</a>
+    {% endif %}
   </form>
 {% endblock%}

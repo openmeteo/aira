@@ -9,29 +9,25 @@
   width="20"
 >&nbsp;{% trans "Apply one of these alternatives:" %}
 <br><br>
-<div class="row" id="{{f.id}}">
-  <div class="col-md-12">
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th></th>
-            <th align="left" >{% trans "Date" %} </th>
-            <th align="left" >{% trans "Water stress factor" %}</th>
-            <th align="left" >{% trans "Irrigation water amount" %} </th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for date, data in f.alternative_irrigations.iterrows %}
-            <tr>
-              <td>{% if not forloop.first %}{% trans "or" %}{% endif %}</td>
-              <td align="left">{{ date|date }}</td>
-              <td align="left">{{ data.ks |floatformat:"2" }} </td>
-              <td align="left">{{ data.ifinal |floatformat:"2" }} mm ({{ data.ifinal_m3|floatformat:"2"}} m³)</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
+<div class="table-responsive" id="{{f.id}}">
+  <table class="table">
+    <thead>
+      <tr>
+        <th></th>
+        <th align="left" >{% trans "Date" %} </th>
+        <th align="left" >{% trans "Water stress factor" %}</th>
+        <th align="left" >{% trans "Irrigation water amount" %} </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for date, data in f.alternative_irrigations.iterrows %}
+        <tr>
+          <td>{% if not forloop.first %}{% trans "or" %}{% endif %}</td>
+          <td align="left">{{ date|date }}</td>
+          <td align="left">{{ data.ks |floatformat:"2" }} </td>
+          <td align="left">{{ data.ifinal |floatformat:"2" }} mm ({{ data.ifinal_m3|floatformat:"2"}} m³)</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>

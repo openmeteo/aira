@@ -1,39 +1,53 @@
 {% load i18n %}
 
-<div class="panel panel-default">
-  <div class="panel-heading">
+<div class="card mt-3">
+  <div class="card-header">
     <b>{% trans "Irrigation duration" %}</b>
   </div>
-  <div class="panel-body">
+  <div class="card-body">
     <div class="col-md-6">
       <div class="input-group">
-        <span class="input-group-addon">{% trans "Area" %}</span>
+        <div class="input-group-prepend">
+          <span class="input-group-text">{% trans "Area" %}</span>
+        </div>
         {% verbatim %}
           <input type="number" ng-model="area" class="form-control" >
         {% endverbatim %}
-        <span class="input-group-addon">m²</span>
+        <div class="input-group-append">
+          <span class="input-group-text">m²</span>
+        </div>
       </div>
       <br>
       <div class="input-group">
-        <span class="input-group-addon">{% trans "Irrigation water amount" %}</span>
+        <div class="input-group-prepend">
+          <span class="input-group-text">{% trans "Irrigation water amount" %}</span>
+        </div>
         {% verbatim %}
           <input type="number" ng-model="irriwatermm" class="form-control" >
         {% endverbatim %}
-        <span class="input-group-addon">mm</span>
+        <div class="input-group-append">
+          <span class="input-group-text">mm</span>
+        </div>
       </div>
       <br>
       <div class="input-group">
-        <span class="input-group-addon">{% trans "Station flow rate" %}</span>
+        <div class="input-group-prepend">
+          <span class="input-group-text">{% trans "Station flow rate" %}</span>
+        </div>
         {% verbatim %}
           <input type="number" ng-model="pump"  ng-init="pump=5" class="form-control" >
         {% endverbatim %}
-        <span class="input-group-addon">m³ / h</span>
+        <div class="input-group-append">
+          <span class="input-group-text">m³ / h</span>
+        </div>
       </div>
       <br>
-      <div class="well well-sm">
-        {% verbatim %}
-          = {{ irriwatermm/1000 * (area/pump)| number:1 }} h
-        {% endverbatim %}
+      <div class="card bg-light">
+        <div class="card-body">
+          {% verbatim %}
+            = {{ irriwatermm/1000 * (area/pump)| number:1 }} h
+          {% endverbatim %}
+        </div>
       </div>
     </div>
   </div>

@@ -1,10 +1,10 @@
 {% load i18n %}
 
-<div class="panel panel-default">
-  <div class="panel-heading">
+<div class="card">
+  <div class="card-header">
     <b>{% trans "Field name" %}:</b> <a href="{% url 'agrifield-update' object.owner.username object.id %}">{{ object.name }}</a>
   </div>
-  <div class="panel-body">
+  <div class="card-body">
     <div id="map" class="map"></div>
   </div>
 </div>

@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 
 {% block title %} {% blocktrans with username=url_username %}{{ username }}'s fields{% endblocktrans %}{% endblock %}
 
@@ -16,8 +16,8 @@
     </div>
   {% endif %}
 
-  <div class="panel panel-default">
-    <div class="panel-body">
+  <div class="card">
+    <div class="card-body">
       <div id="map" class="map"></div>
     </div>
   </div>
@@ -26,8 +26,8 @@
     {% include "aira/agrifield_list/agrifield/main.html" %}
   {% endfor %}
 
-  <div class="panel panel-default">
-    <div class="panel-body">
+  <div class="card">
+    <div class="card-body">
       <a class="btn btn-success" href="{% url 'agrifield-create' url_username %}">{% trans "Add field" %}</a>
     </div>
   </div>

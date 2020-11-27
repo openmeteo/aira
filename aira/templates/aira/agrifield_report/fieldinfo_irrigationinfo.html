@@ -1,10 +1,10 @@
 {% load i18n %}
 
-<div class="panel panel-default">
-  <div class="panel-heading">
+<div class="card mt-3">
+  <div class="card-header">
     <b>{% trans "Irrigation type" %}: </b>{{ object.irrigation_type.name }}
   </div>
-  <div class="panel-body">
+  <div class="card-body">
     <b>{% trans "Irrigation efficiency" %}:</b> {{ object.irrigation_efficiency }} <br>
     <b>{% trans "Irrigation optimizer" %}:</b> {{ object.irrigation_optimizer }} <br>
     {% if object.last_irrigation %}

@@ -51,7 +51,6 @@ class IrrigationPerformanceView(CheckUsernameMixin, DetailView):
     template_name = "aira/performance_chart/main.html"
 
     def get_context_data(self, **kwargs):
-        self.object.can_edit(self.request.user)
         self.context = super().get_context_data(**kwargs)
         if not self.object.results:
             return self.context
@@ -88,7 +87,6 @@ class IrrigationPerformanceCsvView(CheckUsernameMixin, View):
         response[
             "Content-Disposition"
         ] = 'attachment; filename="{}-performance.csv"'.format(f.id)
-        f.can_edit(self.request.user)
         writer = csv.writer(response)
         writer.writerow(
             [
@@ -166,9 +164,6 @@ class AgrifieldListView(LoginRequiredMixin, TemplateView):
         # Fetch models.Agrifield(User)
         try:
             agrifields = models.Agrifield.objects.filter(owner=user).all()
-            for f in agrifields:
-                # Check if user is allowed or 404
-                f.can_edit(self.request.user)
             context["agrifields"] = agrifields
             context["fields_count"] = len(agrifields)
         except models.Agrifield.DoesNotExist:
@@ -189,11 +184,6 @@ class MyFieldsView(RedirectView):
 class AgrifieldReportView(CheckUsernameMixin, LoginRequiredMixin, DetailView):
     model = models.Agrifield
     template_name = "aira/agrifield_report/main.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        self.object.can_edit(self.request.user)
-        return context
 
 
 class CreateAgrifieldView(LoginRequiredMixin, CreateView):
@@ -232,7 +222,6 @@ class UpdateAgrifieldView(CheckUsernameMixin, LoginRequiredMixin, UpdateView):
         return reverse("agrifield-list", kwargs={"username": field.owner})
 
     def get_context_data(self, **kwargs):
-        self.object.can_edit(self.request.user)
         context = super().get_context_data(**kwargs)
         context["agrifield_owner"] = self.object.owner
         return context
@@ -246,12 +235,6 @@ class DeleteAgrifieldView(CheckUsernameMixin, LoginRequiredMixin, DeleteView):
     def get_success_url(self):
         field = models.Agrifield.objects.get(pk=self.kwargs["pk"])
         return reverse("agrifield-list", kwargs={"username": field.owner})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        afieldobj = models.Agrifield.objects.get(pk=self.kwargs["pk"])
-        afieldobj.can_edit(self.request.user)
-        return context
 
 
 class TelemetricFlowmeterViewMixin:
@@ -361,7 +344,6 @@ class AppliedIrrigationsView(
 
     def dispatch(self, request, *args, **kwargs):
         self.agrifield = self.get_agrifield()
-        self.agrifield.can_edit(request.user)
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -379,11 +361,6 @@ class AppliedIrrigationViewMixin:
     def form_valid(self, form):
         form.instance.is_automatically_reported = False
         return super().form_valid(form)
-
-    def get_object(self):
-        applied_irrigation = super().get_object()
-        applied_irrigation.agrifield.can_edit(self.request.user)
-        return applied_irrigation
 
     def get_success_url(self):
         return reverse(
@@ -449,7 +426,6 @@ class AgrifieldTimeseriesView(LoginRequiredMixin, View):
 class DownloadSoilAnalysisView(CheckUsernameMixin, LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         agrifield = self.get_agrifield()
-        agrifield.can_edit(self.request.user)
         if not agrifield.soil_analysis:
             raise Http404
         return FileResponse(agrifield.soil_analysis, as_attachment=True)

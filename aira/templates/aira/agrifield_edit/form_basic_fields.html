@@ -1,5 +1,5 @@
 {% load i18n %}
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 
 <fieldset>
   <div class='form-group'>
@@ -17,7 +17,7 @@
 </fieldset>
 {% buttons %}
   {% if user.username != "demo" %}
-    <button type="submit" class="btn btn-success btn-xs">
+    <button type="submit" class="btn btn-success">
       {% if object %}
         {% trans "Update" %}
       {% else %}
@@ -25,8 +25,8 @@
       {% endif %}
     </button>
     {% if object %}
-      <a class="btn btn-danger btn-xs" href="{% url "agrifield-delete" object.owner.username object.id %}">{% trans "Delete" %}</a>
+      <a class="btn btn-danger" href="{% url "agrifield-delete" object.owner.username object.id %}">{% trans "Delete" %}</a>
     {% endif %}
   {% endif %}
-  <a class="btn btn-success btn-xs" href="{% url 'agrifield-list' agrifield_owner %}"> {% trans "Back" %} </a>
+  <a class="btn btn-success" href="{% url 'agrifield-list' agrifield_owner %}"> {% trans "Back" %} </a>
 {% endbuttons %}

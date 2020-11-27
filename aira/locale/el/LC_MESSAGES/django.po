@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-18 18:08+0200\n"
+"POT-Creation-Date: 2020-11-26 17:09+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -156,65 +156,65 @@ msgstr "Σημείο μόνιμης μάρανσης"
 msgid "Soil analysis document"
 msgstr "Έκθεση εδαφολογικής ανάλυσης"
 
-#: aira/forms.py:131
+#: aira/forms.py:135
 msgid "Error in line {i + 1}: \"{row}\" is not a valid (ndays, kc_end) pair"
 msgstr ""
 "Λάθος στη γραμμή {i + 1}: Το \"{row}\" δεν είναι έγκυρο ζεύγος (μέρες, "
 "kc_end)"
 
-#: aira/forms.py:140
+#: aira/forms.py:144
 msgid "You must select if field is virtual or not"
 msgstr "Πρέπει να καταχωρήσετε αν το αγροτεμάχιο είναι εικονικό ή όχι"
 
-#: aira/forms.py:152
+#: aira/forms.py:156
 msgid "Specify volume of irrigation water"
 msgstr "Καταχώριση όγκου νερού άρδευσης"
 
-#: aira/forms.py:153
+#: aira/forms.py:157
 msgid "Specify duration of irrigation"
 msgstr "Καταχώριση διάρκειας άρδευσης"
 
-#: aira/forms.py:154
+#: aira/forms.py:158
 msgid "Specify flowmeter readings"
 msgstr "Καταχώριση ενδείξεων υδρομέτρου"
 
-#: aira/forms.py:168
+#: aira/forms.py:172
 msgid "Date and time (YYYY-MM-DD HH:mm:ss) "
 msgstr "Ημερομηνία και ώρα (ΕΕΕΕ-ΜΜ-ΗΗ ΩΩ:λλ:δδ)"
 
-#: aira/forms.py:169
+#: aira/forms.py:173
 msgid "Volume of applied irrigation water (m³)"
 msgstr "Όγκος νερού που χορηγήθηκε (m³)"
 
-#: aira/forms.py:170
+#: aira/forms.py:174
 msgid "Duration of irrigation (min)"
 msgstr "Διάρκεια άρδευσης (λεπτά)"
 
-#: aira/forms.py:171
+#: aira/forms.py:175
 msgid "Flow rate (m³/h)"
 msgstr "Παροχή (m³/h)"
 
-#: aira/forms.py:172
+#: aira/forms.py:176
 msgid "Flowmeter reading at start of irrigation"
 msgstr "Ένδειξη υδρομέτρου στην αρχή της άρδευσης"
 
-#: aira/forms.py:173
+#: aira/forms.py:177
 msgid "Flowmeter reading at end of irrigation"
 msgstr "Ένδειξη υδρομέτρου στο τέλος της άρδευσης"
 
-#: aira/forms.py:175 aira/models.py:576
+#: aira/forms.py:179 aira/models.py:573
 msgid "Percentage of water that corresponds to the flowmeter (%)"
 msgstr "Ποσοστό νερού που αντιστοιχεί στο υδρόμετρο (%)"
 
-#: aira/forms.py:199
+#: aira/forms.py:203
 msgid "This field is required."
 msgstr "Αυτό το πεδίο πρέπει να έχει τιμή."
 
-#: aira/forms.py:216
+#: aira/forms.py:220
 msgid "Are you human?"
 msgstr "Είστε άνθρωπος;"
 
-#: aira/forms.py:221
+#: aira/forms.py:225
 msgid "150 characters or fewer. Letters, digits and @/./+/-/_ only."
 msgstr "150 ή λιγότεροι χαρακτήρες. Μόνο γράμματα, ψηφία και @/./+/-/_."
 
@@ -222,61 +222,61 @@ msgstr "150 ή λιγότεροι χαρακτήρες. Μόνο γράμματ�
 msgid "Irrigation status for user {}"
 msgstr "Κατάσταση αρδεύσεων για το χρήστη {}"
 
-#: aira/models.py:40
+#: aira/models.py:38
 msgid "Daily"
 msgstr "Κάθε μέρα"
 
-#: aira/models.py:41
+#: aira/models.py:39
 msgid "Every two days"
 msgstr "Κάθε δύο μέρες"
 
-#: aira/models.py:42
+#: aira/models.py:40
 msgid "Every three days"
 msgstr "Κάθε τρεις μέρες"
 
-#: aira/models.py:43
+#: aira/models.py:41
 msgid "Every four days"
 msgstr "Κάθε τέσσερις μέρες"
 
-#: aira/models.py:44
+#: aira/models.py:42
 msgid "Every five days"
 msgstr "Κάθε πέντε μέρες"
 
-#: aira/models.py:45
+#: aira/models.py:43
 msgid "Weekly"
 msgstr "Κάθε εβδομάδα"
 
-#: aira/models.py:46
+#: aira/models.py:44
 msgid "Every ten days"
 msgstr "Κάθε δέκα μέρες"
 
-#: aira/models.py:47
+#: aira/models.py:45
 msgid "Monthly"
 msgstr "Κάθε μήνα"
 
-#: aira/models.py:52 aira/models.py:54
-#: aira/templates/aira/agrifield_report/agrifield_results.html:33
+#: aira/models.py:50 aira/models.py:52
+#: aira/templates/aira/agrifield_report/agrifield_results.html:34
 msgid "Yes"
 msgstr "Ναι"
 
-#: aira/models.py:52 aira/models.py:54
-#: aira/templates/aira/agrifield_report/agrifield_results.html:33
+#: aira/models.py:50 aira/models.py:52
+#: aira/templates/aira/agrifield_report/agrifield_results.html:34
 msgid "No"
 msgstr "Όχι"
 
-#: aira/models.py:486
+#: aira/models.py:483
 msgid "Volume of water"
 msgstr "Όγκος νερού"
 
-#: aira/models.py:487
+#: aira/models.py:484
 msgid "Duration of irrigation"
 msgstr "Διάρκεια άρδευσης"
 
-#: aira/models.py:488
+#: aira/models.py:485
 msgid "Flowmeter readings"
 msgstr "Ενδείξεις υδρομέτρου"
 
-#: aira/models.py:494
+#: aira/models.py:491
 msgid "Is automatically added by a telemetric flowmeter"
 msgstr "Προστέθηκε αυτόματα από τηλεμετρικό ροόμετρο"
 
@@ -284,20 +284,20 @@ msgstr "Προστέθηκε αυτόματα από τηλεμετρικό ρο
 msgid "Page not found"
 msgstr "Η σελίδα δεν βρέθηκε"
 
-#: aira/templates/aira/agrifield_delete/confirm.html:13
+#: aira/templates/aira/agrifield_delete/confirm.html:11
 #, python-format
 msgid ""
 "\n"
-"            Are you sure you want to delete field <mark>%(name)s</mark>?\n"
-"          "
+"        Are you sure you want to delete field <mark>%(name)s</mark>?\n"
+"      "
 msgstr ""
 "\n"
-"Θέλετε πράγματι να διαγράψετε το αγροτεμάχιο <mark>%(name)s</mark>?"
+"Θέλετε πράγματι να διαγράψετε το αγροτεμάχιο <mark>%(name)s</mark>;"
 
-#: aira/templates/aira/agrifield_delete/confirm.html:21
+#: aira/templates/aira/agrifield_delete/confirm.html:19
 #: aira/templates/aira/agrifield_edit/form_basic_fields.html:28
-#: aira/templates/aira/appliedirrigation/confirm_delete.html:22
-#: aira/templates/aira/appliedirrigation/table_of_logs.html:26
+#: aira/templates/aira/appliedirrigation/confirm_delete.html:19
+#: aira/templates/aira/appliedirrigation/table_of_logs.html:24
 #: aira/templates/auth/user/confirm_delete.html:22
 msgid "Delete"
 msgstr "Διαγραφή"
@@ -317,48 +317,48 @@ msgstr "Πρόσθεση"
 msgid "Back"
 msgstr "Επιστροφή"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:6
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:8
 msgid "Irrigation management"
 msgstr "Διαχείριση άρδευσης"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:8
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:10
 msgid "Default value for selected irrigation type"
 msgstr "Προκαθορισμένη τιμή για την επιλεχθείσα μέθοδο άρδευσης"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:10
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:12
 msgid "Default value"
 msgstr "Προκαθορισμένη τιμή"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:13
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:19
 msgid "Crop"
 msgstr "Καλλιέργεια"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:15
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:17
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:19
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:22
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:24
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:26
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:21
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:23
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:25
 #: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:28
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:30
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:32
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:34
 msgid "Default value for selected crop type"
 msgstr "Προκαθορισμένη τιμή για την επιλεχθείσα καλλιέργεια"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:28
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:34
 msgctxt "default Kc stages"
 msgid "Unspecified"
 msgstr "Μη προσδιορισμένη"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:31
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:41
 msgid "Soil"
 msgstr "Έδαφος"
 
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:33
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:35
-#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:37
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:43
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:45
+#: aira/templates/aira/agrifield_edit/form_custom_parameter_fields.html:47
 msgid "Default value for selected location"
 msgstr "Προκαθορισμένη τιμή για την προσδιορισθείσα θέση"
 
-#: aira/templates/aira/agrifield_edit/map.html:6
+#: aira/templates/aira/agrifield_edit/main.html:19
 msgid "Click on map to specify field location"
 msgstr ""
 "Κάντε κλικ στο χάρτη για να προσθέσετε τις συντεταγμένες του αγροτεμαχίου σας"
@@ -391,7 +391,7 @@ msgid "The field is located outside the covered area"
 msgstr "Το αγροτεμάχιο βρίσκεται εκτός της καλυπτόμενης περιοχής"
 
 #: aira/templates/aira/agrifield_list/agrifield/recalculation_warning.html:5
-#: aira/templates/aira/agrifield_report/agrifield_results.html:6
+#: aira/templates/aira/agrifield_report/agrifield_results.html:7
 #: aira/templates/aira/performance_chart/main.html:12
 msgid ""
 "This field is being (re)calculated. Reload the page some time later to view "
@@ -413,7 +413,7 @@ msgid "No need to irrigate"
 msgstr "Δεν υπάρχει ανάγκη άρδευσης"
 
 #: aira/templates/aira/agrifield_list/agrifield/results_buttons.html:5
-#: aira/templates/aira/appliedirrigation/main.html:16
+#: aira/templates/aira/appliedirrigation/main.html:15
 msgid "Irrigations applied"
 msgstr "Αρδεύσεις που πραγματοποιήθηκαν"
 
@@ -458,18 +458,18 @@ msgstr "Εξατμισοδιαπνοή αναφοράς"
 msgid "Apply one of these alternatives:"
 msgstr "Εφαρμόστε μια από αυτές τις εναλλακτικές:"
 
-#: aira/templates/aira/agrifield_list/agrifield/results_recommendation.html:19
-#: aira/templates/aira/agrifield_report/agrifield_results.html:13
-#: aira/templates/aira/appliedirrigation/table_of_logs.html:12
+#: aira/templates/aira/agrifield_list/agrifield/results_recommendation.html:17
+#: aira/templates/aira/agrifield_report/agrifield_results.html:14
+#: aira/templates/aira/appliedirrigation/table_of_logs.html:11
 msgid "Date"
 msgstr "Ημερομηνία"
 
-#: aira/templates/aira/agrifield_list/agrifield/results_recommendation.html:20
+#: aira/templates/aira/agrifield_list/agrifield/results_recommendation.html:18
 msgid "Water stress factor"
 msgstr "Δείκτης υδατικής καταπόνησης"
 
-#: aira/templates/aira/agrifield_list/agrifield/results_recommendation.html:21
-#: aira/templates/aira/agrifield_report/agrifield_results.html:23
+#: aira/templates/aira/agrifield_list/agrifield/results_recommendation.html:19
+#: aira/templates/aira/agrifield_report/agrifield_results.html:24
 #: aira/templates/aira/tools/duration.html:18
 #: aira/templates/aira/tools/m3_to_mm.html:13
 #: aira/templates/aira/tools/mm_to_m3.html:13
@@ -477,7 +477,7 @@ msgstr "Δείκτης υδατικής καταπόνησης"
 msgid "Irrigation water amount"
 msgstr "Δόση άρδευσης"
 
-#: aira/templates/aira/agrifield_list/agrifield/results_recommendation.html:27
+#: aira/templates/aira/agrifield_list/agrifield/results_recommendation.html:25
 msgid "or"
 msgstr "ή"
 
@@ -505,32 +505,32 @@ msgstr "Αγροτεμάχια του χρήστη %(username)s"
 msgid "Please update your personal information."
 msgstr "Παρακαλώ ανανεώστε τις προσωπικές πληροφορίες σας."
 
-#: aira/templates/aira/agrifield_report/agrifield_results.html:14
-#: aira/templates/aira/performance_chart/main.html:83
+#: aira/templates/aira/agrifield_report/agrifield_results.html:15
+#: aira/templates/aira/performance_chart/main.html:88
 msgid "Effective precipitation"
 msgstr "Ενεργός βροχόπτωση"
 
-#: aira/templates/aira/agrifield_report/agrifield_results.html:15
+#: aira/templates/aira/agrifield_report/agrifield_results.html:16
 msgid "Depletion"
 msgstr "Υδατικό έλλειμμα"
 
-#: aira/templates/aira/agrifield_report/agrifield_results.html:16
+#: aira/templates/aira/agrifield_report/agrifield_results.html:17
 msgid "Soil moisture"
 msgstr "Εδαφική υγρασία"
 
-#: aira/templates/aira/agrifield_report/agrifield_results.html:17
+#: aira/templates/aira/agrifield_report/agrifield_results.html:18
 msgid "Must irrigate"
 msgstr "Χρειάζεται άρδευση"
 
-#: aira/templates/aira/agrifield_report/agrifield_results.html:19
+#: aira/templates/aira/agrifield_report/agrifield_results.html:20
 msgid ""
 "\n"
-"                Water stress <br> factor\n"
-"              "
+"                  Water stress <br> factor\n"
+"                "
 msgstr ""
 "\n"
-"                                  Δείκτης υδατικής <br> καταπόνησης\n"
-"                                "
+"                  Δείκτης υδατικής <br> καταπόνησης\n"
+"                "
 
 #: aira/templates/aira/agrifield_report/fieldinfo_irrigationinfo.html:11
 #: aira/templates/aira/agrifield_report/fieldinfo_irrigationinfo.html:19
@@ -540,7 +540,7 @@ msgstr "Τελευταία καταχωρημένη άρδευση"
 #: aira/templates/aira/agrifield_report/fieldinfo_irrigationinfo.html:13
 #: aira/templates/aira/agrifield_report/fieldinfo_irrigationinfo.html:15
 #: aira/templates/aira/agrifield_report/fieldinfo_irrigationinfo.html:20
-#: aira/templates/aira/appliedirrigation/table_of_logs.html:13
+#: aira/templates/aira/appliedirrigation/table_of_logs.html:12
 msgid "Applied water"
 msgstr "Δόση άρδευσης"
 
@@ -562,18 +562,22 @@ msgstr "Αναφορά άρδευσης για το αγροτεμάχιο %(fie
 msgid "Add irrigation"
 msgstr "Πρόσθεση άρδευσης"
 
-#: aira/templates/aira/appliedirrigation/add_applied_irrigation_form.html:13
+#: aira/templates/aira/appliedirrigation/add_applied_irrigation_form.html:15
+msgid "Date and time (YYYY-MM-DD HH:mm:ss)"
+msgstr "Ημερομηνία και ώρα (ΕΕΕΕ-ΜΜ-ΗΗ ΩΩ:λλ:δδ)"
+
+#: aira/templates/aira/appliedirrigation/add_applied_irrigation_form.html:29
 #: aira/templates/aira/appliedirrigation/telemetry_form.html:18
 msgid "Submit"
 msgstr "Υποβολή"
 
-#: aira/templates/aira/appliedirrigation/confirm_delete.html:13
+#: aira/templates/aira/appliedirrigation/confirm_delete.html:10
 #, python-format
 msgid ""
 "\n"
-"            Are you sure you want to delete the irrigation of "
+"        Are you sure you want to delete the irrigation of "
 "%(applied_irrigation_time)s?\n"
-"          "
+"      "
 msgstr ""
 "\n"
 "Θέλετε πράγματι να διαγράψετε την άρδευση που έγινε στις "
@@ -588,9 +592,15 @@ msgstr "Χωρίς τηλεμετρικό ροόμετρο"
 msgid "List of irrigations"
 msgstr "Κατάλογος αρδεύσεων"
 
-#: aira/templates/aira/appliedirrigation/table_of_logs.html:14
-msgid "Automatically measured"
-msgstr "Μετρημένο αυτόματα"
+#: aira/templates/aira/appliedirrigation/table_of_logs.html:13
+msgid "Auto"
+msgstr ""
+
+#: aira/templates/aira/appliedirrigation/table_of_logs.html:33
+msgid ""
+"Indicates whether it has been registered automatically by a telemetric "
+"flowmeter"
+msgstr "Δείχνει αν έχει καταχωρηθεί αυτόματα από τηλεμετρικό ροόμετρο"
 
 #: aira/templates/aira/appliedirrigation/telemetry_form.html:6
 msgid "Telemetry"
@@ -600,34 +610,34 @@ msgstr "Τηλεμετρία"
 msgid "Update irrigation"
 msgstr "Ενημέρωση άρδευσης"
 
-#: aira/templates/aira/base/main-default.html:30
+#: aira/templates/aira/base/main-default.html:32
 msgid "demo"
 msgstr "Δοκιμαστική χρήση"
 
-#: aira/templates/aira/base/navbar-default.html:23
+#: aira/templates/aira/base/navbar-default.html:20
 msgid "My fields"
 msgstr "Τα αγροτεμάχιά μου"
 
-#: aira/templates/aira/base/navbar-default.html:24
+#: aira/templates/aira/base/navbar-default.html:21
 msgid "Tools"
 msgstr "Εργαλεία"
 
-#: aira/templates/aira/base/navbar-default.html:31
-#: aira/templates/aira/base/navbar-default.html:33
+#: aira/templates/aira/base/navbar-default.html:28
+#: aira/templates/aira/base/navbar-default.html:30
 msgid "Account"
 msgstr "Λογαριασμός"
 
-#: aira/templates/aira/base/navbar-default.html:36
+#: aira/templates/aira/base/navbar-default.html:33
 msgid "Supervisees"
 msgstr "Επιτηρούμενοι"
 
-#: aira/templates/aira/base/navbar-default.html:38
+#: aira/templates/aira/base/navbar-default.html:35
 #: aira/templates/registration/logout.html:5
 #: aira/templates/registration/logout.html:8
 msgid "Logout"
 msgstr "Έξοδος"
 
-#: aira/templates/aira/base/navbar-default.html:46
+#: aira/templates/aira/base/navbar-default.html:43
 #: aira/templates/registration/activation_complete.html:11
 #: aira/templates/registration/login.html:5
 #: aira/templates/registration/login.html:11
@@ -637,12 +647,12 @@ msgstr "Έξοδος"
 msgid "Login"
 msgstr "Είσοδος"
 
-#: aira/templates/aira/base/navbar-default.html:47
+#: aira/templates/aira/base/navbar-default.html:44
 #: aira/templates/registration/registration_form.html:23
 msgid "Register"
 msgstr "Εγγραφή"
 
-#: aira/templates/aira/base/navbar-default.html:48
+#: aira/templates/aira/base/navbar-default.html:45
 msgid "Try"
 msgstr "Δοκιμή"
 
@@ -716,31 +726,31 @@ msgstr "Κλιματικά δεδομένα"
 msgid "Time period"
 msgstr "Περίοδος"
 
-#: aira/templates/aira/frontpage/map_heading.html:23
+#: aira/templates/aira/frontpage/map_heading.html:25
 msgid "Daily rainfall"
 msgstr "Ημερήσια βροχόπτωση"
 
-#: aira/templates/aira/frontpage/map_heading.html:24
+#: aira/templates/aira/frontpage/map_heading.html:26
 msgid "Daily reference evapotranspiration"
 msgstr "Ημερήσια εξατμισοδιαπνοή αναφοράς"
 
-#: aira/templates/aira/frontpage/map_heading.html:25
+#: aira/templates/aira/frontpage/map_heading.html:27
 msgid "Daily humidity"
 msgstr "Μέση ημερήσια υγρασία αέρα"
 
-#: aira/templates/aira/frontpage/map_heading.html:26
+#: aira/templates/aira/frontpage/map_heading.html:28
 msgid "Daily temperature"
 msgstr "Μέση ημερήσια θερμοκρασία"
 
-#: aira/templates/aira/frontpage/map_heading.html:27
+#: aira/templates/aira/frontpage/map_heading.html:29
 msgid "Daily wind speed"
 msgstr "Μέση ημερήσια ταχύτητα ανέμου"
 
-#: aira/templates/aira/frontpage/map_heading.html:28
+#: aira/templates/aira/frontpage/map_heading.html:30
 msgid "Daily solar radiation"
 msgstr "Μέση ημερήσια ηλιακή ακτινοβολία"
 
-#: aira/templates/aira/frontpage/map_heading.html:34
+#: aira/templates/aira/frontpage/map_heading.html:36
 msgid "Monthly reference evapotranspiration"
 msgstr "Μηνιαία εξατμισοδιαπνοή αναφοράς"
 
@@ -764,11 +774,11 @@ msgstr "Σύνολο αρδεύσεων που πραγματοποιήθηκα�
 msgid "Percentage difference"
 msgstr "Επί τοις εκατό διαφορά"
 
-#: aira/templates/aira/performance_chart/main.html:63
+#: aira/templates/aira/performance_chart/main.html:68
 msgid "Estimated irrigation water amount"
 msgstr "Εκτίμηση αρδευτικών αναγκών"
 
-#: aira/templates/aira/performance_chart/main.html:73
+#: aira/templates/aira/performance_chart/main.html:78
 msgid "Applied irrigation water amount"
 msgstr "Αρδεύσεις που πραγματοποιήθηκαν"
 
@@ -950,6 +960,9 @@ msgstr "Παρακαλώ ελέγξτε το email σας"
 msgid "Registration"
 msgstr "Εγγραφή"
 
-#: aira/views.py:81
+#: aira/views.py:80
 msgid "N/A"
 msgstr ""
+
+#~ msgid "Automatically measured"
+#~ msgstr "Μετρημένο αυτόματα"

@@ -10,15 +10,15 @@
 {% block content %}
   <h1>{% trans "My supervisees" %}</h1>
   {% for p in object_list %}
-    <div class="panel panel-default">
-      <div class="panel-body">
+    <div class="card mb-3">
+      <div class="card-body">
         <div class="row">
-          <div class="col-sm-6">{{ p.first_name }} {{ p.last_name }} ({{ p.user.username }})</div>
-          <div class="col-sm-6">
+          <div class="col-md">{{ p.first_name }} {{ p.last_name }} ({{ p.user.username }})</div>
+          <div class="col-md">
             <form method="post" class="form-inline" action="{% url "supervisee-remove" request.user.username %}">
               {% csrf_token %}
-              <a class="btn btn-primary" href="mailto:{{ p.user.email }}">{% trans "Email" %}</a>
-              <a class="btn btn-success" href="{% url "agrifield-list" p.user.username %}">{% trans "Fields" %}</a>
+              <a class="btn btn-primary mr-1" href="mailto:{{ p.user.email }}">{% trans "Email" %}</a>
+              <a class="btn btn-success mr-1" href="{% url "agrifield-list" p.user.username %}">{% trans "Fields" %}</a>
               <input type="hidden" name="supervisee_id" value="{{ p.user.id }}">
               <input type="submit"
                     value={% trans "Remove" %}

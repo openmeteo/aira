@@ -4,28 +4,26 @@
 {% block title %} {{ agrifield.name }} ({{ agrifield.owner.username }}) {% endblock %}
 
 {% block content %}
-  <div class="container">
-    <h3>
-      <a href="{% url "agrifield-list" user %}" style="color: #333; text-decoration: none">
-        <span class="glyphicon glyphicon-menu-left"></span>
-      </a>
-      {{ agrifield.name }}
-      {% if request.user.username != agrifield.owner.username %}
-        ({{ agrifield.owner.username }})
+  <h3>
+    <a href="{% url "agrifield-list" user %}" style="color: #333; text-decoration: none">
+      <span class="glyphicon glyphicon-menu-left"></span>
+    </a>
+    {{ agrifield.name }}
+    {% if request.user.username != agrifield.owner.username %}
+      ({{ agrifield.owner.username }})
+    {% endif %}
+    — {% trans "Irrigations applied" %}
+  </h3>
+  <br>
+  <div class="row">
+    <div class="col-lg">
+      {% include "./add_applied_irrigation_form.html" %}
+      {% include "./telemetry_form.html" %}
+    </div>
+    <div class="col-lg">
+      {% if agrifield.appliedirrigation_set.exists %}
+        {% include "./table_of_logs.html" %}
       {% endif %}
-      — {% trans "Irrigations applied" %}
-    </h3>
-    <br>
-    <div class="row">
-      <div class="col-md-5">
-        {% include "./add_applied_irrigation_form.html" %}
-        {% include "./telemetry_form.html" %}
-      </div>
-      <div class="col-md-7">
-        {% if agrifield.appliedirrigation_set.exists %}
-          {% include "./table_of_logs.html" %}
-        {% endif %}
-      </div>
     </div>
   </div>
 {% endblock %}

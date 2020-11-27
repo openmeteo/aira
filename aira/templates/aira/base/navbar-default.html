@@ -2,55 +2,51 @@
 {% load i18n %}
 
 {% block navbar %}
-  <div class="navbar navbar-default" role="navigation">
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        {% block navbar_brand %}
-          <a style="max-width:100px; margin-top: -13px;" class="navbar-brand" href="{% url 'frontpage' %}">
-            <img src="{% static 'img/aira-logo.png' %}" width="40" height="45">
-          </a>
-        {% endblock %}
+  <nav class="navbar navbar-expand-lg {% block navbar_styles %}navbar-light bg-light{% endblock %}">
+    {% block navbar_brand %}
+      <a style="max-width:100px; margin-top: -5px;" class="navbar-brand" href="{% url 'frontpage' %}">
+        <img src="{% static 'img/aira-logo.png' %}" width="40" height="45">
+      </a>
+    {% endblock %}
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+        data-target="#navbarCollapsibleMenu" aria-controls="navbarCollapsibleMenu"
+        aria-expanded="false" aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    {% if user.is_authenticated %}
+      <div class="navbar-collapse collapse" id="navbarCollapsibleMenu">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item"><a class="nav-link" href="{% url 'agrifield-list' user.username %}"  rel="nofollow">{% trans "My fields" %}</a></li>
+          <li class="nav-item insert-support-link-after-this"><a class="nav-link" href="{% url 'tools' %}">{% trans "Tools" %}</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <span id="management-link">{{ user.username }}</span>
+            </a>
+            <div class="dropdown-menu" aira-labelledby="navbarDropdown">
+              {% if user.profile.id %}
+                <a class="dropdown-item" href="{% url 'edit_profile' user.username  %}">{% trans "Account" %}</a>
+              {% else %}
+                <a class="dropdown-item" href="{% url 'create_profile' %}">{% trans "Account" %}</a>
+              {% endif %}
+              {% if user.supervisees.exists %}
+                <a class="dropdown-item" href="{% url 'supervisees' user.username %}">{% trans "Supervisees" %}</a>
+              {% endif %}
+              <a class="dropdown-item" href="{% url 'auth_logout' %}">{% trans "Logout" %}</a>
+            </div>
+          </li>
+        </ul>
       </div>
-      {% if user.is_authenticated %}
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="{% url 'agrifield-list' user.username %}"  rel="nofollow">{% trans "My fields" %}</a></li>
-            <li class="insert-support-link-after-this"><a href="{% url 'tools' %}">{% trans "Tools" %}</a></li>
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                <span id="management-link">{{ user.username }}</span><span class="caret"></span>
-              </a>
-              <ul class="dropdown-menu" role="menu">
-                {% if user.profile.id %}
-                  <li><a href="{% url 'edit_profile' user.username  %}">{% trans "Account" %}</a></li>
-                {% else %}
-                  <li><a href="{% url 'create_profile' %}">{% trans "Account" %}</a></li>
-                {% endif %}
-                {% if user.supervisees.exists %}
-                  <li><a href="{% url 'supervisees' user.username %}">{% trans "Supervisees" %}</a></li>
-                {% endif %}
-                <li><a href="{% url 'auth_logout' %}">{% trans "Logout" %}</a></li>
-              </ul>
-            </li>
-          </ul>
-        </div>
-      {% else %}
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="{% url 'auth_login' %}" rel="nofollow">{% trans "Login" %}</a></li>
-            <li class="insert-support-link-after-this"><a href="{% url 'registration_register' %}" rel="nofollow">{% trans "Register" %}</a></li>
-            <li><a href="{% url 'try' %}" rel="nofollow">{% trans "Try" %}</a></li>
-          </ul>
-        </div>
-      {% endif %}
-    </div>
-  </div>
+    {% else %}
+      <div class="navbar-collapse collapse" id="navbarCollapsibleMenu">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item"><a class="nav-link" href="{% url 'auth_login' %}" rel="nofollow">{% trans "Login" %}</a></li>
+          <li class="nav-item insert-support-link-after-this"><a class="nav-link" href="{% url 'registration_register' %}" rel="nofollow">{% trans "Register" %}</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'try' %}" rel="nofollow">{% trans "Try" %}</a></li>
+        </ul>
+      </div>
+    {% endif %}
+  </nav>
   {% comment %}
     We have a different menu if the user is authenticated and if not. We want
     to insert {% block support_link %} in both menus. However, Django only allows
