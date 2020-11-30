@@ -53,5 +53,5 @@ def _get_ttn_data(since="1d"):
             "device_id": d["device_id"],
         }
         for d in response.json()
-        if d["SensorFrequency"] is not None
+        if d["SensorFrequency"]
     ]
