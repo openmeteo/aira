@@ -100,3 +100,18 @@ class LoRA_ARTAFlowmeterTTNIntegrationTestCase(TestCase):
             mock_log.assert_called_once_with(
                 "Got non-existing flowmeter with id=1338 from TTN."
             )
+
+    @patch("aira.tasks.requests.get")
+    def test_zero_sensor_frequency(self, mocked_get):
+        mocked_get.return_value = MockResponse(
+            data_points=[
+                {
+                    "SensorFrequency": 0.0,
+                    "device_id": "d1",
+                    "raw": "AAAbvAUUBvA=",
+                    "time": "2020-10-18T00:19:27.62050186Z",
+                }
+            ]
+        )
+        result = _get_ttn_data()
+        self.assertEqual(result, [])
