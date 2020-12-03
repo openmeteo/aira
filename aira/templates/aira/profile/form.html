@@ -36,7 +36,7 @@
     {% if user.username != "demo" %}
       <button type="submit" class="btn btn-primary">{% trans "Update" %}</button>
       <a class="btn btn-primary"href="{% url 'auth_password_reset' %}">{% trans "Reset password" %}</a>
-      <a class="btn btn-danger" href="{% url 'delete_user' user.id %}"> {% trans "Delete account" %}</a>
+      <a id="btn-delete-account" class="btn btn-danger" href="{% url 'delete_user' user.username %}"> {% trans "Delete account" %}</a>
     {% endif %}
   </form>
 {% endblock%}

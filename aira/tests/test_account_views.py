@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 
+from bs4 import BeautifulSoup
+
 
 class RegistrationViewTestCase(TestCase):
     def test_template_is_overriden(self):
@@ -18,16 +20,25 @@ class RegistrationViewTestCase(TestCase):
 
 
 class ProfileViewsTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.bob = User.objects.create_user(id=55, username="bob", password="topsecret")
+        cls.bob.profile.first_name = "Bob"
+        cls.bob.profile.last_name = "Brown"
+        cls.bob.profile.save()
+
     def setUp(self):
-        self.bob = User.objects.create_user(id=55, username="bob", password="topsecret")
-        self.bob.profile.first_name = "Bob"
-        self.bob.profile.last_name = "Brown"
-        self.bob.profile.save()
         self.client.login(username="bob", password="topsecret")
 
     def test_get_edit_view(self):
         response = self.client.get("/accounts/edit_profile/bob/")
         self.assertContains(response, "Bob")
+
+    def test_edit_view_delete_account_button(self):
+        response = self.client.get("/accounts/edit_profile/bob/")
+        soup = BeautifulSoup(response.content.decode(), "html.parser")
+        href = soup.find(id="btn-delete-account")["href"]
+        self.assertEqual(href, "/accounts/delete_user/bob/")
 
     def test_get_delete_confirmation(self):
         response = self.client.get("/accounts/delete_user/bob/")
