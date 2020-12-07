@@ -472,7 +472,7 @@ class LoRA_ARTAFlowmeterTestCase(TestCase):
         15(report freq) x 10(sensor freq) / 6.8(def. conversion)
             = 22.058
         """
-        water_volume = self.flowmeter._calculate_water_volume(10)
+        water_volume = self.flowmeter._calculate_water_volume(10.0)
         self.assertAlmostEqual(float(water_volume), 22.058 / 2, delta=0.01)
 
     def test_points_created_as_automated_reporting(self):
