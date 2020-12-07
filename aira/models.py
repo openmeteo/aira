@@ -593,10 +593,11 @@ class LoRA_ARTAFlowmeter(TelemetricFlowmeter):
 
     def _calculate_water_volume(self, sensor_frequency):
         return (
-            Decimal(self.flowmeter_water_percentage / 100)
+            self.flowmeter_water_percentage
+            / 100
             * self.report_frequency_in_minutes
             * sensor_frequency
-            / self.conversion_rate
+            / float(self.conversion_rate)
         )
 
     def create_irrigations_in_bulk(self, data_points):
