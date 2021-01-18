@@ -10,7 +10,7 @@ require('../static/js/aira');
 
 describe('meteoMapPanel.updateMeteoLayer', () => {
   const tileLayerWmsReturnValue = { addTo: jest.fn() };
-  aira.map.layerSwitcher = { addOverlay: jest.fn() };
+  aira.map.layerSwitcher = { addOverlay: jest.fn(), removeLayer: jest.fn() };
   L.tileLayer.wms.mockReturnValue(tileLayerWmsReturnValue);
   aira.map.leafletMap = { removeLayer: jest.fn() };
 

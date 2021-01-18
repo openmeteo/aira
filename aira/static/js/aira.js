@@ -197,6 +197,7 @@ aira.meteoMapPanel = {
 
   removeCurrentMeteoLayer() {
     if (this.currentMeteoLayer) {
+      aira.map.layerSwitcher.removeLayer(this.currentMeteoLayer);
       aira.map.leafletMap.removeLayer(this.currentMeteoLayer);
       this.currentMeteoLayer = null;
     }
